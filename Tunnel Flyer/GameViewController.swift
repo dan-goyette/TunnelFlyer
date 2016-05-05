@@ -67,7 +67,12 @@ class GameViewController: UIViewController {
         
         
         
+        
+        
         var hexArrays = [[SCNVector3]]()
+        
+        
+        
         var ring1Points = [SCNVector3]()
         ring1Points.append(SCNVector3Make(-5, 4, 0))
         ring1Points.append(SCNVector3Make(0, 6, 0))
@@ -86,6 +91,26 @@ class GameViewController: UIViewController {
         ring2Points.append(SCNVector3Make(-5, -4, -5))
         hexArrays.append(ring2Points)
         
+        var ring3Points = [SCNVector3]()
+        ring3Points.append(SCNVector3Make(-5, 4, -10))
+        ring3Points.append(SCNVector3Make(0, 6, -10))
+        ring3Points.append(SCNVector3Make(5, 4, -10))
+        ring3Points.append(SCNVector3Make(5, -4, -10))
+        ring3Points.append(SCNVector3Make(0, -6, -10))
+        ring3Points.append(SCNVector3Make(-5, -4, -10))
+        hexArrays.append(ring3Points)
+        
+        
+        var ring4Points = [SCNVector3]()
+        ring4Points.append(SCNVector3Make(-5, 4.4, -15))
+        ring4Points.append(SCNVector3Make(0.8, 6.1, -15))
+        ring4Points.append(SCNVector3Make(5, 4, -15))
+        ring4Points.append(SCNVector3Make(5, -4.1, -15))
+        ring4Points.append(SCNVector3Make(0.4, -6.4, -15))
+        ring4Points.append(SCNVector3Make(-5, -4, -15))
+        hexArrays.append(ring4Points)
+
+        
         
         for i in 0...(hexArrays.count - 2) {
             let ring1 = hexArrays[i]
@@ -96,13 +121,13 @@ class GameViewController: UIViewController {
                 let triangle1Point2 = ring1[(j + 1) % ring1.count]
                 let triangle1Point3 = ring2[j % ring1.count]
                 
-                addTriangleFromPoints(scene, point1: triangle1Point1, point2: triangle1Point2, point3: triangle1Point3)
+                addTriangleFromPositions(scene, point1: triangle1Point1, point2: triangle1Point2, point3: triangle1Point3)
                 
                 let triangle2Point1 = ring1[(j + 1) % ring1.count]
                 let triangle2Point2 = ring2[(j + 1) % ring1.count]
                 let triangle2Point3 = ring2[j % ring1.count]
                 
-                addTriangleFromPoints(scene, point1: triangle2Point1, point2: triangle2Point2, point3: triangle2Point3)
+                addTriangleFromPositions(scene, point1: triangle2Point1, point2: triangle2Point2, point3: triangle2Point3)
 
             }
         }
@@ -126,12 +151,37 @@ class GameViewController: UIViewController {
         bezierPath.addLineToPoint(CGPointMake(CGFloat(point3.x), CGFloat(point3.y)))
         bezierPath.closePath()
         
+        
         let shape = SCNShape(path: bezierPath, extrusionDepth: 0)
         shape.materials = [material]
         let shapeNode = SCNNode(geometry: shape)
-        shapeNode.position = SCNVector3(x: 0, y: 0, z: 0);
+        shapeNode.position = SCNVector3(x: 0, y: 0, z: point1.z);
         scene.rootNode.addChildNode(shapeNode)
-        shapeNode.rotation = SCNVector4(x: -1.0, y: -1.0, z: 5.0, w: 0.0)
+        shapeNode.rotation = SCNVector4(x: 90, y: 90.0, z: 90, w: 0.0)
+    }
+    
+    func addTriangleFromPositions(scene: SCNScene, point1: SCNVector3, point2: SCNVector3, point3: SCNVector3)
+    {
+        let positions: [Float32] = [point1.x, point1.y, point1.z, point2.x, point2.y, point2.z, point3.x, point3.y, point3.z,]
+        let positionData = NSData(bytes: positions, length: sizeof(Float32)*positions.count)
+        let indices: [Int32] = [0, 1, 2]
+        let indexData = NSData(bytes: indices, length: sizeof(Int32) * indices.count)
+        
+        let source = SCNGeometrySource(data: positionData, semantic: SCNGeometrySourceSemanticVertex, vectorCount: indices.count, floatComponents: true, componentsPerVector: 3, bytesPerComponent: sizeof(Float32), dataOffset: 0, dataStride: sizeof(Float32) * 3)
+        let element = SCNGeometryElement(data: indexData, primitiveType: SCNGeometryPrimitiveType.Triangles, primitiveCount: indices.count, bytesPerIndex: sizeof(Int32))
+        
+        let triangle = SCNGeometry(sources: [source], elements: [element])
+        
+        let material = SCNMaterial()
+        material.doubleSided = true
+        material.diffuse.contents = getRandomColor()
+        
+
+        
+        triangle.materials = [material]
+        let shapeNode = SCNNode(geometry: triangle)
+        scene.rootNode.addChildNode(shapeNode)
+
     }
     
     
