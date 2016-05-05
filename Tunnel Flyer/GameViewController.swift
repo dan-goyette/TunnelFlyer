@@ -26,7 +26,7 @@ class GameViewController: UIViewController {
         // place the camera
         cameraNode.position = SCNVector3(x: 0, y: 0, z: 15)
         
-        cameraNode.runAction(SCNAction.repeatActionForever(SCNAction.moveByX(0, y: 0, z: -2, duration: 1)))
+        //cameraNode.runAction(SCNAction.repeatActionForever(SCNAction.moveByX(0, y: 0, z: -2, duration: 1)))
         
         // create and add a light to the scene
         let lightNode = SCNNode()
@@ -65,31 +65,81 @@ class GameViewController: UIViewController {
         
         // Add some hexagons
         
-        let cyanMaterial = SCNMaterial()
-        cyanMaterial.diffuse.contents = UIColor.cyanColor()
-        cyanMaterial.doubleSided = true
         
-        let anOrangeMaterial = SCNMaterial()
-        anOrangeMaterial.diffuse.contents = UIColor.orangeColor()
         
-        let aPurpleMaterial = SCNMaterial()
-        aPurpleMaterial.diffuse.contents = UIColor.purpleColor()
+        var hexArrays = [[SCNVector3]]()
+        var ring1Points = [SCNVector3]()
+        ring1Points.append(SCNVector3Make(-5, 4, 0))
+        ring1Points.append(SCNVector3Make(0, 6, 0))
+        ring1Points.append(SCNVector3Make(5, 4, 0))
+        ring1Points.append(SCNVector3Make(5, -4, 0))
+        ring1Points.append(SCNVector3Make(0, -6, 0))
+        ring1Points.append(SCNVector3Make(-5, -4, 0))
+        hexArrays.append(ring1Points)
         
-        // A bezier path
+        var ring2Points = [SCNVector3]()
+        ring2Points.append(SCNVector3Make(-5, 4.4, -5))
+        ring2Points.append(SCNVector3Make(0.8, 6.1, -5))
+        ring2Points.append(SCNVector3Make(5, 4, -5))
+        ring2Points.append(SCNVector3Make(5, -4.1, -5))
+        ring2Points.append(SCNVector3Make(0.4, -6.4, -5))
+        ring2Points.append(SCNVector3Make(-5, -4, -5))
+        hexArrays.append(ring2Points)
+        
+        
+        for i in 0...(hexArrays.count - 2) {
+            let ring1 = hexArrays[i]
+            let ring2 = hexArrays[i + 1]
+            
+            for j in 0...(ring1.count - 1) {
+                let triangle1Point1 = ring1[j % ring1.count]
+                let triangle1Point2 = ring1[(j + 1) % ring1.count]
+                let triangle1Point3 = ring2[j % ring1.count]
+                
+                addTriangleFromPoints(scene, point1: triangle1Point1, point2: triangle1Point2, point3: triangle1Point3)
+                
+                let triangle2Point1 = ring1[(j + 1) % ring1.count]
+                let triangle2Point2 = ring2[(j + 1) % ring1.count]
+                let triangle2Point3 = ring2[j % ring1.count]
+                
+                addTriangleFromPoints(scene, point1: triangle2Point1, point2: triangle2Point2, point3: triangle2Point3)
+
+            }
+        }
+        
+       
+    }
+    
+    func addTriangleFromPoints(scene: SCNScene, point1: SCNVector3, point2: SCNVector3, point3: SCNVector3) {
+        
+        
+        let material = SCNMaterial()
+        material.doubleSided = true
+        material.diffuse.contents = getRandomColor()
+        
+        
+        
         let bezierPath = UIBezierPath()
-        bezierPath.moveToPoint(CGPointMake(0, 0))
-        bezierPath.addLineToPoint(CGPointMake(0, 5))
-        bezierPath.addLineToPoint(CGPointMake(5, 5))
+        
+        bezierPath.moveToPoint(CGPointMake(CGFloat(point1.x), CGFloat(point1.y)))
+        bezierPath.addLineToPoint(CGPointMake(CGFloat(point2.x), CGFloat(point2.y)))
+        bezierPath.addLineToPoint(CGPointMake(CGFloat(point3.x), CGFloat(point3.y)))
         bezierPath.closePath()
         
-        // Add shape
-        let shape = SCNShape(path: bezierPath, extrusionDepth: 1)
-        shape.materials = [cyanMaterial, anOrangeMaterial, aPurpleMaterial]
+        let shape = SCNShape(path: bezierPath, extrusionDepth: 0)
+        shape.materials = [material]
         let shapeNode = SCNNode(geometry: shape)
         shapeNode.position = SCNVector3(x: 0, y: 0, z: 0);
         scene.rootNode.addChildNode(shapeNode)
-        shapeNode.rotation = SCNVector4(x: -1.0, y: -1.0, z: 0.0, w: 0.0)
-
+        shapeNode.rotation = SCNVector4(x: -1.0, y: -1.0, z: 5.0, w: 0.0)
+    }
+    
+    
+    func getRandomColor() -> UIColor{
+        let randomRed:CGFloat = CGFloat(drand48())
+        let randomGreen:CGFloat = CGFloat(drand48())
+        let randomBlue:CGFloat = CGFloat(drand48())
+        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
     }
     
     func handleTap(gestureRecognize: UIGestureRecognizer) {
