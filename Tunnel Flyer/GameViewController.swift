@@ -16,7 +16,7 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
         
         // create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        let scene = SCNScene()
         
         // create and add a camera to the scene
         let cameraNode = SCNNode()
@@ -25,6 +25,8 @@ class GameViewController: UIViewController {
         
         // place the camera
         cameraNode.position = SCNVector3(x: 0, y: 0, z: 15)
+        
+        cameraNode.runAction(SCNAction.repeatActionForever(SCNAction.moveByX(0, y: 0, z: -2, duration: 1)))
         
         // create and add a light to the scene
         let lightNode = SCNNode()
@@ -39,12 +41,7 @@ class GameViewController: UIViewController {
         ambientLightNode.light!.type = SCNLightTypeAmbient
         ambientLightNode.light!.color = UIColor.darkGrayColor()
         scene.rootNode.addChildNode(ambientLightNode)
-        
-        // retrieve the ship node
-        let ship = scene.rootNode.childNodeWithName("ship", recursively: true)!
-        
-        // animate the 3d object
-        ship.runAction(SCNAction.repeatActionForever(SCNAction.rotateByX(0, y: 2, z: 0, duration: 1)))
+      
         
         // retrieve the SCNView
         let scnView = self.view as! SCNView
@@ -60,10 +57,39 @@ class GameViewController: UIViewController {
         
         // configure the view
         scnView.backgroundColor = UIColor.blackColor()
+
         
-        // add a tap gesture recognizer
-        let tapGesture = UITapGestureRecognizer(target: self, action: "handleTap:")
-        scnView.addGestureRecognizer(tapGesture)
+        
+        
+        
+        
+        // Add some hexagons
+        
+        let cyanMaterial = SCNMaterial()
+        cyanMaterial.diffuse.contents = UIColor.cyanColor()
+        cyanMaterial.doubleSided = true
+        
+        let anOrangeMaterial = SCNMaterial()
+        anOrangeMaterial.diffuse.contents = UIColor.orangeColor()
+        
+        let aPurpleMaterial = SCNMaterial()
+        aPurpleMaterial.diffuse.contents = UIColor.purpleColor()
+        
+        // A bezier path
+        let bezierPath = UIBezierPath()
+        bezierPath.moveToPoint(CGPointMake(0, 0))
+        bezierPath.addLineToPoint(CGPointMake(0, 5))
+        bezierPath.addLineToPoint(CGPointMake(5, 5))
+        bezierPath.closePath()
+        
+        // Add shape
+        let shape = SCNShape(path: bezierPath, extrusionDepth: 1)
+        shape.materials = [cyanMaterial, anOrangeMaterial, aPurpleMaterial]
+        let shapeNode = SCNNode(geometry: shape)
+        shapeNode.position = SCNVector3(x: 0, y: 0, z: 0);
+        scene.rootNode.addChildNode(shapeNode)
+        shapeNode.rotation = SCNVector4(x: -1.0, y: -1.0, z: 0.0, w: 0.0)
+
     }
     
     func handleTap(gestureRecognize: UIGestureRecognizer) {
@@ -111,9 +137,9 @@ class GameViewController: UIViewController {
     
     override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
         if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
-            return .AllButUpsideDown
+            return .Landscape
         } else {
-            return .All
+            return .Landscape
         }
     }
     
