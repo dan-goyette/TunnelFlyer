@@ -16,7 +16,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
     
     let DRAW_DISTANCE : Float = 100.0
-    let RING_VARIANCE_MIN : Float = -1.0
+    let RING_VARIANCE_MIN : Float = -2.0
     let RING_VARIANCE_MAX : Float = 3.0
     let CAMERA_SPEED : Float = 15.0
     let HEX_RING_Z_INTERVAL : Float = 5
@@ -82,12 +82,29 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     func createHexRing( z : Float) -> [SCNVector3] {
         var ring = [SCNVector3]()
-        ring.append(SCNVector3Make(-5 + getHexVariance(), 4 + getHexVariance(), z))
-        ring.append(SCNVector3Make(0 +  getHexVariance(), 6 + getHexVariance(), z))
-        ring.append(SCNVector3Make(5 + getHexVariance(), 4 + getHexVariance(), z))
-        ring.append(SCNVector3Make(5 + getHexVariance(), -4 + getHexVariance(), z))
-        ring.append(SCNVector3Make(0 + getHexVariance(), -6 + getHexVariance(), z))
-        ring.append(SCNVector3Make(-5 + getHexVariance(), -4 + getHexVariance(), z))
+        
+//        ring.append(SCNVector3Make(-5 + getHexVariance(), 4 + getHexVariance(), z))
+//        ring.append(SCNVector3Make(0 +  getHexVariance(), 6 + getHexVariance(), z))
+//        ring.append(SCNVector3Make(5 + getHexVariance(), 4 + getHexVariance(), z))
+//        ring.append(SCNVector3Make(5 + getHexVariance(), -4 + getHexVariance(), z))
+//        ring.append(SCNVector3Make(0 + getHexVariance(), -6 + getHexVariance(), z))
+//        ring.append(SCNVector3Make(-5 + getHexVariance(), -4 + getHexVariance(), z))
+        
+        
+        ring.append(SCNVector3Make(-12 +  getHexVariance(), 0 + getHexVariance(), z))
+        ring.append(SCNVector3Make(-8 +  getHexVariance(), 3 + getHexVariance(), z))
+        ring.append(SCNVector3Make(-4 + getHexVariance(), 6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 + getHexVariance(), 9 + getHexVariance(), z))
+        ring.append(SCNVector3Make(4 + getHexVariance(), 6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(8 + getHexVariance(), 3 + getHexVariance(), z))
+        ring.append(SCNVector3Make(12 + getHexVariance(), 0 + getHexVariance(), z))
+        ring.append(SCNVector3Make(8 + getHexVariance(), -3 + getHexVariance(), z))
+        ring.append(SCNVector3Make(4 + getHexVariance(), -6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 + getHexVariance(), -9 + getHexVariance(), z))
+        ring.append(SCNVector3Make(-4 + getHexVariance(), -6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(-8 +  getHexVariance(), -3 + getHexVariance(), z))
+
+
         return ring
     
     }
