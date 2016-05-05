@@ -10,23 +10,38 @@ import UIKit
 import QuartzCore
 import SceneKit
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
+    let scene = SCNScene()
+
+    
+    let DRAW_DISTANCE : Float = 100.0
+    let RING_VARIANCE_MIN : Float = -1.0
+    let RING_VARIANCE_MAX : Float = 3.0
+    let CAMERA_SPEED : Float = 15.0
+    let HEX_RING_Z_INTERVAL : Float = 5
+    
+    var currentMaxDistance = 0
+    
+    var lastHexRing : [SCNVector3]? = nil
+    var hexRingZ : Float = 0
+    
+    
+    var cameraNode = SCNNode()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // create a new scene
-        let scene = SCNScene()
         
         // create and add a camera to the scene
-        let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
         scene.rootNode.addChildNode(cameraNode)
         
         // place the camera
         cameraNode.position = SCNVector3(x: 0, y: 0, z: 15)
         
-        //cameraNode.runAction(SCNAction.repeatActionForever(SCNAction.moveByX(0, y: 0, z: -2, duration: 1)))
+        cameraNode.runAction(SCNAction.repeatActionForever(SCNAction.moveByX(0, y: 0, z: CGFloat(-1 *  CAMERA_SPEED), duration: 1)))
         
         // create and add a light to the scene
         let lightNode = SCNNode()
@@ -46,6 +61,10 @@ class GameViewController: UIViewController {
         // retrieve the SCNView
         let scnView = self.view as! SCNView
         
+        
+        scnView.delegate = self
+        
+        
         // set the scene to the view
         scnView.scene = scene
         
@@ -58,106 +77,68 @@ class GameViewController: UIViewController {
         // configure the view
         scnView.backgroundColor = UIColor.blackColor()
 
-        
-        
-        
-        
-        
-        // Add some hexagons
-        
-        
-        
-        
-        
-        var hexArrays = [[SCNVector3]]()
-        
-        
-        
-        var ring1Points = [SCNVector3]()
-        ring1Points.append(SCNVector3Make(-5, 4, 0))
-        ring1Points.append(SCNVector3Make(0, 6, 0))
-        ring1Points.append(SCNVector3Make(5, 4, 0))
-        ring1Points.append(SCNVector3Make(5, -4, 0))
-        ring1Points.append(SCNVector3Make(0, -6, 0))
-        ring1Points.append(SCNVector3Make(-5, -4, 0))
-        hexArrays.append(ring1Points)
-        
-        var ring2Points = [SCNVector3]()
-        ring2Points.append(SCNVector3Make(-5, 4.4, -5))
-        ring2Points.append(SCNVector3Make(0.8, 6.1, -5))
-        ring2Points.append(SCNVector3Make(5, 4, -5))
-        ring2Points.append(SCNVector3Make(5, -4.1, -5))
-        ring2Points.append(SCNVector3Make(0.4, -6.4, -5))
-        ring2Points.append(SCNVector3Make(-5, -4, -5))
-        hexArrays.append(ring2Points)
-        
-        var ring3Points = [SCNVector3]()
-        ring3Points.append(SCNVector3Make(-5, 4, -10))
-        ring3Points.append(SCNVector3Make(0, 6, -10))
-        ring3Points.append(SCNVector3Make(5, 4, -10))
-        ring3Points.append(SCNVector3Make(5, -4, -10))
-        ring3Points.append(SCNVector3Make(0, -6, -10))
-        ring3Points.append(SCNVector3Make(-5, -4, -10))
-        hexArrays.append(ring3Points)
-        
-        
-        var ring4Points = [SCNVector3]()
-        ring4Points.append(SCNVector3Make(-5, 4.4, -15))
-        ring4Points.append(SCNVector3Make(0.8, 6.1, -15))
-        ring4Points.append(SCNVector3Make(5, 4, -15))
-        ring4Points.append(SCNVector3Make(5, -4.1, -15))
-        ring4Points.append(SCNVector3Make(0.4, -6.4, -15))
-        ring4Points.append(SCNVector3Make(-5, -4, -15))
-        hexArrays.append(ring4Points)
-
-        
-        
-        for i in 0...(hexArrays.count - 2) {
-            let ring1 = hexArrays[i]
-            let ring2 = hexArrays[i + 1]
-            
-            for j in 0...(ring1.count - 1) {
-                let triangle1Point1 = ring1[j % ring1.count]
-                let triangle1Point2 = ring1[(j + 1) % ring1.count]
-                let triangle1Point3 = ring2[j % ring1.count]
-                
-                addTriangleFromPositions(scene, point1: triangle1Point1, point2: triangle1Point2, point3: triangle1Point3)
-                
-                let triangle2Point1 = ring1[(j + 1) % ring1.count]
-                let triangle2Point2 = ring2[(j + 1) % ring1.count]
-                let triangle2Point3 = ring2[j % ring1.count]
-                
-                addTriangleFromPositions(scene, point1: triangle2Point1, point2: triangle2Point2, point3: triangle2Point3)
-
-            }
-        }
-        
        
     }
     
-    func addTriangleFromPoints(scene: SCNScene, point1: SCNVector3, point2: SCNVector3, point3: SCNVector3) {
+    func createHexRing( z : Float) -> [SCNVector3] {
+        var ring = [SCNVector3]()
+        ring.append(SCNVector3Make(-5 + getHexVariance(), 4 + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 +  getHexVariance(), 6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(5 + getHexVariance(), 4 + getHexVariance(), z))
+        ring.append(SCNVector3Make(5 + getHexVariance(), -4 + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 + getHexVariance(), -6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(-5 + getHexVariance(), -4 + getHexVariance(), z))
+        return ring
+    
+    }
+    
+    func randomBetweenNumbers(firstNum: Float, secondNum: Float) -> Float{
+        return Float(arc4random()) / Float(UINT32_MAX) * abs(firstNum - secondNum) + min(firstNum, secondNum)
+    }
+    
+    
+    func renderer(renderer: SCNSceneRenderer, updateAtTime time: NSTimeInterval) {
+        
+        // If the last ring is too close, draw another ring.
+        while (self.hexRingZ - cameraNode.position.z > (-1 * self.DRAW_DISTANCE) ) {
+            self.addTunnelSection()
+        }
+    }
+    
+    func addTunnelSection() {
+        if (self.lastHexRing == nil) {
+            self.lastHexRing = self.createHexRing(self.hexRingZ)
+            self.hexRingZ -= self.HEX_RING_Z_INTERVAL
+        }
+        
+        let nextRing = self.createHexRing(self.hexRingZ)
+        self.hexRingZ -= self.HEX_RING_Z_INTERVAL
+        drawRingConnections(self.lastHexRing!, ring2: nextRing)
+        
+        self.lastHexRing = nextRing
+    }
+    
+    func drawRingConnections(ring1 : [SCNVector3], ring2: [SCNVector3]) {
         
         
-        let material = SCNMaterial()
-        material.doubleSided = true
-        material.diffuse.contents = getRandomColor()
-        
-        
-        
-        let bezierPath = UIBezierPath()
-        
-        bezierPath.moveToPoint(CGPointMake(CGFloat(point1.x), CGFloat(point1.y)))
-        bezierPath.addLineToPoint(CGPointMake(CGFloat(point2.x), CGFloat(point2.y)))
-        bezierPath.addLineToPoint(CGPointMake(CGFloat(point3.x), CGFloat(point3.y)))
-        bezierPath.closePath()
-        
-        
-        let shape = SCNShape(path: bezierPath, extrusionDepth: 0)
-        shape.materials = [material]
-        let shapeNode = SCNNode(geometry: shape)
-        shapeNode.position = SCNVector3(x: 0, y: 0, z: point1.z);
-        scene.rootNode.addChildNode(shapeNode)
-        shapeNode.rotation = SCNVector4(x: 90, y: 90.0, z: 90, w: 0.0)
+        for j in 0...(ring1.count - 1) {
+            let triangle1Point1 = ring1[j % ring1.count]
+            let triangle1Point2 = ring1[(j + 1) % ring1.count]
+            let triangle1Point3 = ring2[j % ring1.count]
+
+            addTriangleFromPositions(scene, point1: triangle1Point1, point2: triangle1Point2, point3: triangle1Point3)
+
+            let triangle2Point1 = ring1[(j + 1) % ring1.count]
+            let triangle2Point2 = ring2[(j + 1) % ring1.count]
+            let triangle2Point3 = ring2[j % ring1.count]
+
+            addTriangleFromPositions(scene, point1: triangle2Point1, point2: triangle2Point2, point3: triangle2Point3)
+
+        }
+    }
+    
+    func getHexVariance() -> Float {
+        return randomBetweenNumbers( self.RING_VARIANCE_MIN, secondNum: self.RING_VARIANCE_MAX)
     }
     
     func addTriangleFromPositions(scene: SCNScene, point1: SCNVector3, point2: SCNVector3, point3: SCNVector3)
