@@ -9,6 +9,9 @@
 import UIKit
 import QuartzCore
 import SceneKit
+import SpriteKit
+
+let directionPressedNotificationKey = "com.dan-goyette.TunnerlFlyer.DirectionPressedNotificationKey"
 
 class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
@@ -20,6 +23,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let RING_VARIANCE_MAX : Float = 3.0
     let CAMERA_SPEED : Float = 0.25
     let HEX_RING_Z_INTERVAL : Float = 5
+    let SHIP_MOVEMENT_SPEED : Float = 0.2
     
     var currentMaxDistance = 0
     
@@ -30,8 +34,20 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     var cameraNode = SCNNode()
     
+    var isShipMovingUp : Bool = false
+    var isShipMovingDown : Bool = false
+    var isShipMovingLeft : Bool = false
+    var isShipMovingRight : Bool = false
+
+    
+    var hudScene :  SKScene!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        unifiedCameraShipNode = SCNNode()
+        unifiedCameraShipNode.position = SCNVector3(x: 0, y: 0, z: 0)
         
         
         // Create ship
@@ -43,9 +59,12 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Relative to the unified camera ship, the camera is 15z closer to the viewer.
         cameraNode.position = SCNVector3(x: 0, y: 4, z: 15)
         
-        unifiedCameraShipNode = SCNNode()
+        let cameraConstraint = SCNLookAtConstraint(target: shipNode)
+        cameraConstraint.gimbalLockEnabled = true
+        cameraNode.constraints = [cameraConstraint]
+        
         unifiedCameraShipNode.addChildNode(cameraNode)
-        unifiedCameraShipNode.position = SCNVector3(x: 0, y: 0, z: 0)
+        
         
         scene.rootNode.addChildNode(unifiedCameraShipNode)
 
@@ -80,7 +99,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         scnView.playing = true;
         
         // prevents the user from manipulate the camera
-        scnView.allowsCameraControl = true
+        scnView.allowsCameraControl = false
         
         // show statistics such as fps and timing information
         scnView.showsStatistics = true
@@ -90,7 +109,40 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
         
         
-       
+        createHudScene()
+        scnView.overlaySKScene = hudScene
+
+//    
+//        self.hudScene.addObserver(scnView.scene!, forKeyPath: "upPressed", options: .New, context: nil)
+//        self.hudScene.addObserver(scnView.scene!, forKeyPath: "downPressed", options: .New, context: nil)
+//        self.hudScene.addObserver(scnView.scene!, forKeyPath: "leftPressed", options: .New, context: nil)
+//        self.hudScene.addObserver(scnView.scene!, forKeyPath: "rightPressed", options: .New, context: nil)
+//        
+
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameViewController.directionNodePressed(_:)), name: directionPressedNotificationKey, object: nil)
+        
+    }
+    
+    func directionNodePressed(notification: NSNotification) {
+        if let movingUp = notification.userInfo?["up"] as? Bool {
+            isShipMovingUp = movingUp
+        }
+        if let movingDown = notification.userInfo?["down"] as? Bool {
+            isShipMovingDown = movingDown
+        }
+        if let movingLeft = notification.userInfo?["left"] as? Bool {
+            isShipMovingLeft = movingLeft
+        }
+        if let movingRight = notification.userInfo?["right"] as? Bool {
+            isShipMovingRight = movingRight
+        }
+    }
+    
+    
+  
+    
+    func createHudScene() {
+        hudScene = OverlayScene(size: self.view.bounds.size)
     }
     
     func createHexRing( z : Float) -> [SCNVector3] {
@@ -129,7 +181,25 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         }
         
         unifiedCameraShipNode.position.z -= CAMERA_SPEED
+      
+
         
+        if (isShipMovingUp) {
+            shipNode.position.y += SHIP_MOVEMENT_SPEED
+        }
+        if (isShipMovingDown) {
+            shipNode.position.y -= SHIP_MOVEMENT_SPEED
+        }
+        if (isShipMovingLeft) {
+            shipNode.position.x -= SHIP_MOVEMENT_SPEED
+        }
+        if (isShipMovingRight) {
+            shipNode.position.x += SHIP_MOVEMENT_SPEED
+        }
+        
+        unifiedCameraShipNode.position.x = shipNode.position.x / 2.0
+        unifiedCameraShipNode.position.y = shipNode.position.y / 2.0
+
     }
     
     func addTunnelSection() {
@@ -240,7 +310,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Pyramid shape
         let mainShipPyramidGeometry = SCNPyramid(width: 3.0, height: 4.0, length: 1.0)
         let mainShipPyramidMaterial = SCNMaterial()
-        mainShipPyramidMaterial.diffuse.contents = UIColor.greenColor()
+        mainShipPyramidMaterial.diffuse.contents = UIColor.grayColor()
         mainShipPyramidGeometry.materials = [mainShipPyramidMaterial]
         let mainShipPyramidNode = SCNNode(geometry: mainShipPyramidGeometry)
         
@@ -248,7 +318,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Thruster box
         let thrusterBoxGeometry = SCNBox(width: 3.0, height: 1, length: 1, chamferRadius: 0)
         let thrusterBoxMaterial = SCNMaterial()
-        thrusterBoxMaterial.diffuse.contents = UIColor.blueColor()
+        thrusterBoxMaterial.diffuse.contents = UIColor.grayColor()
         thrusterBoxGeometry.materials = [thrusterBoxMaterial]
         let thrusterBoxNode = SCNNode(geometry: thrusterBoxGeometry)
         thrusterBoxNode.position.y = -0.5
@@ -257,7 +327,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Left Wing
         let leftWingGeometry = SCNPyramid(width: 1.0, height: 2.0, length: 1.0)
         let leftWingMaterial = SCNMaterial()
-        leftWingMaterial.diffuse.contents = UIColor.redColor()
+        leftWingMaterial.diffuse.contents = UIColor.grayColor()
         leftWingGeometry.materials = [leftWingMaterial]
         let leftWingNode = SCNNode(geometry: leftWingGeometry)
         leftWingNode.position.y = -0.5
@@ -268,7 +338,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Right Wing
         let rightWingGeometry = SCNPyramid(width: 1.0, height: 2.0, length: 1.0)
         let rightWingMaterial = SCNMaterial()
-        rightWingMaterial.diffuse.contents = UIColor.redColor()
+        rightWingMaterial.diffuse.contents = UIColor.grayColor()
         rightWingGeometry.materials = [rightWingMaterial]
         let rightWingNode = SCNNode(geometry: rightWingGeometry)
         rightWingNode.position.y = -0.5
@@ -281,7 +351,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Left torch
         let leftTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
         let leftTorchMaterial = SCNMaterial()
-        leftTorchMaterial.diffuse.contents = UIColor.redColor()
+        leftTorchMaterial.diffuse.contents = UIColor.blackColor()
         leftTorchGeometry.materials = [leftTorchMaterial]
         let leftTorchNode = SCNNode(geometry: leftTorchGeometry)
         leftTorchNode.position.y = 2
@@ -299,7 +369,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Left torch
         let rightTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
         let rightTorchMaterial = SCNMaterial()
-        rightTorchMaterial.diffuse.contents = UIColor.redColor()
+        rightTorchMaterial.diffuse.contents = UIColor.blackColor()
         rightTorchGeometry.materials = [rightTorchMaterial]
         let rightTorchNode = SCNNode(geometry: rightTorchGeometry)
         rightTorchNode.position.y = 2
@@ -352,3 +422,5 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     }
 
 }
+
+
