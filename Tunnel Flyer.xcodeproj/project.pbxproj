@@ -14,6 +14,7 @@
 		EE7BBC861CDAF5CC00318415 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE7BBC851CDAF5CC00318415 /* Assets.xcassets */; };
 		EE7BBC891CDAF5CC00318415 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EE7BBC871CDAF5CC00318415 /* LaunchScreen.storyboard */; };
 		EED5F5271CE025270086181F /* HudScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED5F5261CE025270086181F /* HudScene.swift */; };
+		EEDC7A031CE13FEC00BF3633 /* Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDC7A021CE13FEC00BF3633 /* Support.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		EE7BBC881CDAF5CC00318415 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		EE7BBC8A1CDAF5CC00318415 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EED5F5261CE025270086181F /* HudScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HudScene.swift; sourceTree = "<group>"; };
+		EEDC7A021CE13FEC00BF3633 /* Support.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 				EE7BBC871CDAF5CC00318415 /* LaunchScreen.storyboard */,
 				EE7BBC8A1CDAF5CC00318415 /* Info.plist */,
 				EED5F5261CE025270086181F /* HudScene.swift */,
+				EEDC7A021CE13FEC00BF3633 /* Support.swift */,
 			);
 			path = "Tunnel Flyer";
 			sourceTree = "<group>";
@@ -143,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EED5F5271CE025270086181F /* HudScene.swift in Sources */,
+				EEDC7A031CE13FEC00BF3633 /* Support.swift in Sources */,
 				EE7BBC811CDAF5CC00318415 /* GameViewController.swift in Sources */,
 				EE7BBC7D1CDAF5CC00318415 /* AppDelegate.swift in Sources */,
 			);

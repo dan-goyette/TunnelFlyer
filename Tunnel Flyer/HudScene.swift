@@ -12,14 +12,20 @@ import SpriteKit
 
 class OverlayScene: SKScene {
     
-    var upNode: SKSpriteNode!
-    var downNode: SKSpriteNode!
-    var rightNode: SKSpriteNode!
-    var leftNode: SKSpriteNode!
-    var upPressed: Bool = false
-    var downPressed: Bool = false
-    var leftPressed: Bool = false
-    var rightPressed: Bool = false
+    var leftUpNode: SKSpriteNode!
+    var leftDownNode: SKSpriteNode!
+    var rightUpNode: SKSpriteNode!
+    var rightDownNode: SKSpriteNode!
+    var leftUpPressed: Bool = false
+    var leftDownPressed: Bool = false
+    var rightUpPressed: Bool = false
+    var rightDownPressed: Bool = false
+    
+    
+    var diagLabel1 : SKLabelNode!
+    var diagLabel2 : SKLabelNode!
+    var diagLabel3 : SKLabelNode!
+
   
     override init(size: CGSize) {
         super.init(size: size)
@@ -28,22 +34,59 @@ class OverlayScene: SKScene {
         
         let spriteSize = size.width/15
         
-        upNode = SKSpriteNode(color: UIColor.redColor(), size: CGSizeMake(spriteSize, spriteSize))
-        upNode.position = CGPoint(x: 2 * spriteSize, y: 3 * spriteSize)
-        downNode = SKSpriteNode(color: UIColor.blueColor(), size: CGSizeMake(spriteSize, spriteSize))
-        downNode.position = CGPoint(x: 2 * spriteSize, y: spriteSize)
-        leftNode = SKSpriteNode(color: UIColor.purpleColor(), size: CGSizeMake(spriteSize, spriteSize))
-        leftNode.position = CGPoint(x: spriteSize , y: 2 * spriteSize )
-        rightNode = SKSpriteNode(color: UIColor.greenColor(), size: CGSizeMake(spriteSize, spriteSize))
-        rightNode.position = CGPoint(x: 3 * spriteSize, y: 2 * spriteSize)
+        leftUpNode = SKSpriteNode(color: UIColor.redColor(), size: CGSizeMake(spriteSize, spriteSize))
+        leftUpNode.position = CGPoint(x: spriteSize, y: 3 * spriteSize)
+        leftDownNode = SKSpriteNode(color: UIColor.blueColor(), size: CGSizeMake(spriteSize, spriteSize))
+        leftDownNode.position = CGPoint(x: spriteSize, y: spriteSize)
+        
+        rightUpNode = SKSpriteNode(color: UIColor.purpleColor(), size: CGSizeMake(spriteSize, spriteSize))
+        rightUpNode.position = CGPoint(x: size.width - 2 * spriteSize , y: 3 * spriteSize )
+        rightDownNode = SKSpriteNode(color: UIColor.greenColor(), size: CGSizeMake(spriteSize, spriteSize))
+        rightDownNode.position = CGPoint(x: size.width - 2 * spriteSize, y: spriteSize)
 
        
-        self.addChild(self.upNode)
-        self.addChild(self.downNode)
-        self.addChild(self.leftNode)
-        self.addChild(self.rightNode)
+        self.addChild(self.leftUpNode)
+        self.addChild(self.leftDownNode)
+        self.addChild(self.rightUpNode)
+        self.addChild(self.rightDownNode)
+        
+        diagLabel1 = SKLabelNode()
+        diagLabel1.position = CGPoint(x: 3 * spriteSize, y: 2 * spriteSize)
+        diagLabel1.fontSize = 16
+        diagLabel1.fontName = "AvenirNext-Bold"
+        diagLabel1.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Left
+        diagLabel2 = SKLabelNode()
+        diagLabel2.position = CGPoint(x: 3 * spriteSize, y: 1.5 * spriteSize)
+        diagLabel2.fontSize = 16
+        diagLabel2.fontName = "AvenirNext-Bold"
+        diagLabel2.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Left
+        diagLabel3 = SKLabelNode()
+        diagLabel3.position = CGPoint(x: 3 * spriteSize, y: 1 * spriteSize)
+        diagLabel3.fontSize = 16
+        diagLabel3.fontName = "AvenirNext-Bold"
+        diagLabel3.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Left
+        
+        self.addChild(self.diagLabel1)
+        self.addChild(self.diagLabel2)
+        self.addChild(self.diagLabel3)
+
+
+        
+        // Listen for GameStats changes, so we update the stats
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(OverlayScene.gameStatsUpdated(_:)), name: gameStatsUpdatedNotificationKey, object: nil)
+        
 
     }
+    
+    
+    func gameStatsUpdated(notification: NSNotification) {
+        if let gameStats = notification.userInfo?["gameStats"] as? GameStats {
+            diagLabel1.text = String(format: "X: %.4f; Y: %.4f; Z: %.4f", gameStats.shipX, gameStats.shipY, gameStats.shipZ)
+            diagLabel2.text = String(format: "Pitch: %.4f; Roll: %.4f", gameStats.shipPitch, gameStats.shipRoll)
+        }
+    }
+
+    
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -57,17 +100,17 @@ class OverlayScene: SKScene {
             for touch in touches {
                 let location = touch.locationInNode(self)
                 
-                if self.upNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["up": true])
+                if self.leftUpNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftUp": true])
                 }
-                if self.downNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["down": true])
+                if self.leftDownNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftDown": true])
                 }
-                if self.leftNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["left": true])
+                if self.rightUpNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightUp": true])
                 }
-                if self.rightNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["right": true])
+                if self.rightDownNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightDown": true])
                 }
             }
         }
@@ -79,17 +122,17 @@ class OverlayScene: SKScene {
             for touch in touches {
                 let location = touch.locationInNode(self)
                 
-                if self.upNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["up": false])
+                if self.leftUpNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftUp": false])
                 }
-                if self.downNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["down": false])
+                if self.leftDownNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftDown": false])
                 }
-                if self.leftNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["left": false])
+                if self.rightUpNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightUp": false])
                 }
-                if self.rightNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["right": false])
+                if self.rightDownNode.containsPoint(location) {
+                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightDown": false])
                 }
             }
         }
