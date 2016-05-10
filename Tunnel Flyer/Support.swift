@@ -14,3 +14,8 @@ class GameStats {
     var shipY : Float = 0.0
     var shipZ : Float = 0.0
 }
+
+class JoystickValues {
+    var leftJoystickValue : Float = 0.0
+    var rightJoystickValue : Float = 0.0
+}

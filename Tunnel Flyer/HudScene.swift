@@ -11,22 +11,26 @@ import SpriteKit
 
 
 class OverlayScene: SKScene {
+
+    var leftJoyStickNode: SKSpriteNode!
+    var leftJoyStickNodeIsDown: Bool = false
+    var leftJoyStickTouch: UITouch?
     
-    var leftUpNode: SKSpriteNode!
-    var leftDownNode: SKSpriteNode!
-    var rightUpNode: SKSpriteNode!
-    var rightDownNode: SKSpriteNode!
-    var leftUpPressed: Bool = false
-    var leftDownPressed: Bool = false
-    var rightUpPressed: Bool = false
-    var rightDownPressed: Bool = false
+    var rightJoyStickNode: SKSpriteNode!
+    var rightJoyStickNodeIsDown: Bool = false
+    var rightJoyStickTouch: UITouch?
     
     
     var diagLabel1 : SKLabelNode!
     var diagLabel2 : SKLabelNode!
     var diagLabel3 : SKLabelNode!
 
-  
+    var maxJoyStickYValue : CGFloat!
+    var minJoyStickYValue : CGFloat!
+    
+    var leftJoystickValue : Float = 0.0
+    var rightJoystickValue : Float = 0.0
+    
     override init(size: CGSize) {
         super.init(size: size)
         
@@ -34,21 +38,6 @@ class OverlayScene: SKScene {
         
         let spriteSize = size.width/15
         
-        leftUpNode = SKSpriteNode(color: UIColor.redColor(), size: CGSizeMake(spriteSize, spriteSize))
-        leftUpNode.position = CGPoint(x: spriteSize, y: 3 * spriteSize)
-        leftDownNode = SKSpriteNode(color: UIColor.blueColor(), size: CGSizeMake(spriteSize, spriteSize))
-        leftDownNode.position = CGPoint(x: spriteSize, y: spriteSize)
-        
-        rightUpNode = SKSpriteNode(color: UIColor.purpleColor(), size: CGSizeMake(spriteSize, spriteSize))
-        rightUpNode.position = CGPoint(x: size.width - 2 * spriteSize , y: 3 * spriteSize )
-        rightDownNode = SKSpriteNode(color: UIColor.greenColor(), size: CGSizeMake(spriteSize, spriteSize))
-        rightDownNode.position = CGPoint(x: size.width - 2 * spriteSize, y: spriteSize)
-
-       
-        self.addChild(self.leftUpNode)
-        self.addChild(self.leftDownNode)
-        self.addChild(self.rightUpNode)
-        self.addChild(self.rightDownNode)
         
         diagLabel1 = SKLabelNode()
         diagLabel1.position = CGPoint(x: 3 * spriteSize, y: 2 * spriteSize)
@@ -69,13 +58,20 @@ class OverlayScene: SKScene {
         self.addChild(self.diagLabel1)
         self.addChild(self.diagLabel2)
         self.addChild(self.diagLabel3)
-
-
+        
+        maxJoyStickYValue = size.height - 4 * spriteSize
+        minJoyStickYValue = 4 * spriteSize
+        
+        leftJoyStickNode = SKSpriteNode(color: UIColor.init(red: 0.2, green: 0.2, blue: 0.2, alpha: 0.5), size: CGSizeMake(spriteSize, spriteSize))
+        leftJoyStickNode.position = CGPoint(x: 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        self.addChild(self.leftJoyStickNode)
+        
+        rightJoyStickNode = SKSpriteNode(color: UIColor.init(red: 0.2, green: 0.2, blue: 0.2, alpha: 0.5), size: CGSizeMake(spriteSize, spriteSize))
+        rightJoyStickNode.position = CGPoint(x: size.width - 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        self.addChild(self.rightJoyStickNode)
         
         // Listen for GameStats changes, so we update the stats
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(OverlayScene.gameStatsUpdated(_:)), name: gameStatsUpdatedNotificationKey, object: nil)
-        
-
     }
     
     
@@ -83,6 +79,7 @@ class OverlayScene: SKScene {
         if let gameStats = notification.userInfo?["gameStats"] as? GameStats {
             diagLabel1.text = String(format: "X: %.4f; Y: %.4f; Z: %.4f", gameStats.shipX, gameStats.shipY, gameStats.shipZ)
             diagLabel2.text = String(format: "Pitch: %.4f; Roll: %.4f", gameStats.shipPitch, gameStats.shipRoll)
+            diagLabel3.text = String(format: "Left Joy: %.4f; Right Joy: %.4f", self.leftJoystickValue, self.rightJoystickValue)
         }
     }
 
@@ -100,19 +97,75 @@ class OverlayScene: SKScene {
             for touch in touches {
                 let location = touch.locationInNode(self)
                 
-                if self.leftUpNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftUp": true])
+                if (self.leftJoyStickNode.containsPoint(location)) {
+                    if (self.leftJoyStickTouch == nil) {
+                        self.leftJoyStickTouch = touch
+                        self.leftJoyStickNodeIsDown = true
+                    }
                 }
-                if self.leftDownNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftDown": true])
+                if (self.rightJoyStickNode.containsPoint(location)) {
+                    if (self.rightJoyStickTouch == nil) {
+                        self.rightJoyStickTouch = touch
+                        self.rightJoyStickNodeIsDown = true
+                    }
                 }
-                if self.rightUpNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightUp": true])
+
+            }
+        }
+    }
+    
+    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        var joystickValueChanged = false
+        
+        if (touches.count > 0) {
+            for touch in touches {
+                if (touch == self.leftJoyStickTouch) {
+                    self.leftJoyStickNode.position.y = touch.locationInNode(self).y
+                    if (self.leftJoyStickNode.position.y < minJoyStickYValue) {
+                        self.leftJoyStickNode.position.y = minJoyStickYValue
+                    } else if (self.leftJoyStickNode.position.y > maxJoyStickYValue) {
+                        self.leftJoyStickNode.position.y = maxJoyStickYValue
+                    }
+                    
+                    let joyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
+                    let newMax = maxJoyStickYValue - joyAvg
+
+                    let newLeftJoystickAmount = Float((self.leftJoyStickNode.position.y - joyAvg) / newMax)
+                    if (newLeftJoystickAmount != leftJoystickValue) {
+                        joystickValueChanged = true
+                        
+                    }
+                    leftJoystickValue = newLeftJoystickAmount
                 }
-                if self.rightDownNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightDown": true])
+                
+                
+                if (touch == self.rightJoyStickTouch) {
+                    self.rightJoyStickNode.position.y = touch.locationInNode(self).y
+                    if (self.rightJoyStickNode.position.y < minJoyStickYValue) {
+                        self.rightJoyStickNode.position.y = minJoyStickYValue
+                    } else if (self.rightJoyStickNode.position.y > maxJoyStickYValue) {
+                        self.rightJoyStickNode.position.y = maxJoyStickYValue
+                    }
+                    
+                    let joyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
+                    let newMax = maxJoyStickYValue - joyAvg
+                    
+                    let newRightJoystickAmount = Float((self.rightJoyStickNode.position.y - joyAvg) / newMax)
+                    if (newRightJoystickAmount != rightJoystickValue) {
+                        joystickValueChanged = true
+                        
+                    }
+                    rightJoystickValue = newRightJoystickAmount
                 }
             }
+        }
+        
+        if (joystickValueChanged) {
+            let joystickValues = JoystickValues()
+            joystickValues.leftJoystickValue = leftJoystickValue
+            joystickValues.rightJoystickValue = rightJoystickValue
+            NSNotificationCenter.defaultCenter().postNotificationName(joystickValueChangedNotificationKey, object: nil, userInfo:["joystickValues": joystickValues])
+
         }
     }
     
@@ -120,19 +173,16 @@ class OverlayScene: SKScene {
         
         if (touches.count > 0) {
             for touch in touches {
-                let location = touch.locationInNode(self)
+//                let location = touch.locationInNode(self)
                 
-                if self.leftUpNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftUp": false])
+                
+                if (touch == self.leftJoyStickTouch) {
+                    self.leftJoyStickTouch = nil
+                    self.leftJoyStickNodeIsDown = false
                 }
-                if self.leftDownNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["leftDown": false])
-                }
-                if self.rightUpNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightUp": false])
-                }
-                if self.rightDownNode.containsPoint(location) {
-                    NSNotificationCenter.defaultCenter().postNotificationName(directionPressedNotificationKey, object: nil, userInfo:["rightDown": false])
+                if (touch == self.rightJoyStickTouch) {
+                    self.rightJoyStickTouch = nil
+                    self.rightJoyStickNodeIsDown = false
                 }
             }
         }

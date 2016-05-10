@@ -11,7 +11,7 @@ import QuartzCore
 import SceneKit
 import SpriteKit
 
-let directionPressedNotificationKey = "com.dan-goyette.TunnerlFlyer.directionPressedNotificationKey"
+let joystickValueChangedNotificationKey = "com.dan-goyette.TunnerlFlyer.joystickValueChangedNotificationKey"
 let gameStatsUpdatedNotificationKey = "com.dan-goyette.TunnerlFlyer.gameStatsUpdatedNotificationKey"
 
 class GameViewController: UIViewController, SCNSceneRendererDelegate {
@@ -24,9 +24,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let RING_VARIANCE_MAX : Float = 3.0
     let CAMERA_SPEED : Float = 0.25
     let HEX_RING_Z_INTERVAL : Float = 5
-    let SHIP_MOVEMENT_SPEED : Float = 0.2
-    let SHIP_PITCH_INTERVAL : Float = 0.01
-    let SHIP_ROLL_INTERVAL : Float = 0.001
+    let SHIP_MOVEMENT_SPEED : Float = 0.5
+    let SHIP_PITCH_INTERVAL : Float = 0.50
+    let SHIP_ROLL_INTERVAL : Float = 0.04
     
     var currentMaxDistance = 0
     
@@ -37,14 +37,10 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     var cameraNode = SCNNode()
     
-
     var shipRoll : Float = 0
     var shipPitch : Float = 0
     
-    var leftUpIsPressed : Bool = false
-    var leftDownIsPressed : Bool = false
-    var rightUpIsPressed : Bool = false
-    var rightDownIsPressed : Bool = false
+    var joystickValues : JoystickValues = JoystickValues()
     
     
     var hudScene :  SKScene!
@@ -119,22 +115,13 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         createHudScene()
         scnView.overlaySKScene = hudScene
 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameViewController.directionNodePressed(_:)), name: directionPressedNotificationKey, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameViewController.joystickValueChanged(_:)), name: joystickValueChangedNotificationKey, object: nil)
         
     }
     
-    func directionNodePressed(notification: NSNotification) {
-        if let leftUp = notification.userInfo?["leftUp"] as? Bool {
-            leftUpIsPressed = leftUp
-        }
-        if let leftDown = notification.userInfo?["leftDown"] as? Bool {
-            leftDownIsPressed = leftDown
-        }
-        if let rightUp = notification.userInfo?["rightUp"] as? Bool {
-            rightUpIsPressed = rightUp
-        }
-        if let rightDown = notification.userInfo?["rightDown"] as? Bool {
-            rightDownIsPressed = rightDown
+    func joystickValueChanged(notification: NSNotification) {
+        if let newValues = notification.userInfo?["joystickValues"] as? JoystickValues {
+            joystickValues = newValues
         }
     }
     
@@ -183,34 +170,38 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         unifiedCameraShipNode.position.z -= CAMERA_SPEED
       
 
+        shipRoll = (joystickValues.leftJoystickValue - joystickValues.rightJoystickValue) * SHIP_ROLL_INTERVAL
+        shipPitch =  -1 * (joystickValues.leftJoystickValue + joystickValues.rightJoystickValue) * SHIP_PITCH_INTERVAL
         
-        if (leftUpIsPressed) {
-            shipRoll -= SHIP_ROLL_INTERVAL
-            shipPitch -= SHIP_PITCH_INTERVAL
-        }
-        if (leftDownIsPressed) {
-            shipRoll += SHIP_ROLL_INTERVAL
-            shipPitch += SHIP_PITCH_INTERVAL
-    
-        }
-        if (rightUpIsPressed) {
-            shipRoll += SHIP_ROLL_INTERVAL
-            shipPitch -= SHIP_PITCH_INTERVAL
-
-        }
-        if (rightDownIsPressed) {
-            shipRoll -= SHIP_ROLL_INTERVAL
-            shipPitch += SHIP_PITCH_INTERVAL
-        }
+//        
+//        if (leftUpIsPressed) {
+//            shipRoll -= SHIP_ROLL_INTERVAL
+//            shipPitch -= SHIP_PITCH_INTERVAL
+//        }
+//        if (leftDownIsPressed) {
+//            shipRoll += SHIP_ROLL_INTERVAL
+//            shipPitch += SHIP_PITCH_INTERVAL
+//    
+//        }
+//        if (rightUpIsPressed) {
+//            shipRoll += SHIP_ROLL_INTERVAL
+//            shipPitch -= SHIP_PITCH_INTERVAL
+//
+//        }
+//        if (rightDownIsPressed) {
+//            shipRoll -= SHIP_ROLL_INTERVAL
+//            shipPitch += SHIP_PITCH_INTERVAL
+//        }
+//        
         
         
-        
+      
         unifiedCameraShipNode.rotation.z = 1
         unifiedCameraShipNode.rotation.w += shipRoll
         
         
-        unifiedCameraShipNode.position.x += sin( unifiedCameraShipNode.rotation.z ) * shipPitch * SHIP_MOVEMENT_SPEED
-        unifiedCameraShipNode.position.y += cos( unifiedCameraShipNode.rotation.z ) * shipPitch * SHIP_MOVEMENT_SPEED
+        unifiedCameraShipNode.position.x += sin( unifiedCameraShipNode.rotation.w ) * shipPitch * SHIP_MOVEMENT_SPEED
+        unifiedCameraShipNode.position.y += cos( unifiedCameraShipNode.rotation.w ) * shipPitch * SHIP_MOVEMENT_SPEED
         
         
         
