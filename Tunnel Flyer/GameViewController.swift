@@ -188,6 +188,10 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // If the last ring is too close, draw another ring.
         while (self.hexRingZ - unifiedCameraShipNode.position.z > (-1 * self.DRAW_DISTANCE) ) {
             self.addTunnelSection()
+            
+            if (self.hexRingZ % 15 == 0) {
+                createDebris()
+            }
         }
         
         unifiedCameraShipNode.position.z -= CAMERA_SPEED
@@ -227,9 +231,35 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         shipRollNode.rotation.w = shipRoll * 3.0
         
         
-        NSNotificationCenter.defaultCenter().postNotificationName(gameStatsUpdatedNotificationKey, object: nil, userInfo:["gameStats": gameStats])
+        //NSNotificationCenter.defaultCenter().postNotificationName(gameStatsUpdatedNotificationKey, object: nil, userInfo:["gameStats": gameStats])
 
     }
+
+    
+    func createDebris() {
+        let cube = SCNBox(width: 5, height: 5, length: 5, chamferRadius: 2)
+        
+        let material = SCNMaterial()
+        material.doubleSided = true
+        material.diffuse.contents = getRandomColor()
+        
+        cube.materials = [material]
+        let cubeNode = SCNNode(geometry: cube)
+        cubeNode.position.z = self.hexRingZ
+        
+        cubeNode.position.x = randomBetweenNumbers( -12.0, secondNum: 12.0)
+        cubeNode.position.y = randomBetweenNumbers( -12.0, secondNum: 12.0)
+        cubeNode.position.z = self.hexRingZ
+
+        
+        let rotate = SCNAction.rotateByX(2.1, y: 0.3, z: 1.1, duration: 1.0)
+        let rotateLoop = SCNAction.repeatActionForever(rotate)
+        cubeNode.runAction(rotateLoop)
+        
+        scene.rootNode.addChildNode(cubeNode)
+
+    }
+    
     
     func addTunnelSection() {
         if (self.lastHexRing == nil) {
