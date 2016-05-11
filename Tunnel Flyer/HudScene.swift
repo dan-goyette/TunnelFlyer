@@ -12,10 +12,12 @@ import SpriteKit
 
 class OverlayScene: SKScene {
 
+    var leftJoyStickDefaultLocation: CGPoint!
     var leftJoyStickNode: SKSpriteNode!
     var leftJoyStickNodeIsDown: Bool = false
     var leftJoyStickTouch: UITouch?
     
+    var rightJoyStickDefaultLocation: CGPoint!
     var rightJoyStickNode: SKSpriteNode!
     var rightJoyStickNodeIsDown: Bool = false
     var rightJoyStickTouch: UITouch?
@@ -63,11 +65,13 @@ class OverlayScene: SKScene {
         minJoyStickYValue = 4 * spriteSize
         
         leftJoyStickNode = SKSpriteNode(color: UIColor.init(red: 0.2, green: 0.2, blue: 0.2, alpha: 0.5), size: CGSizeMake(spriteSize, spriteSize))
-        leftJoyStickNode.position = CGPoint(x: 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        leftJoyStickDefaultLocation = CGPoint(x: 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        leftJoyStickNode.position = leftJoyStickDefaultLocation
         self.addChild(self.leftJoyStickNode)
         
         rightJoyStickNode = SKSpriteNode(color: UIColor.init(red: 0.2, green: 0.2, blue: 0.2, alpha: 0.5), size: CGSizeMake(spriteSize, spriteSize))
-        rightJoyStickNode.position = CGPoint(x: size.width - 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        rightJoyStickDefaultLocation = CGPoint(x: size.width - 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        rightJoyStickNode.position = rightJoyStickDefaultLocation
         self.addChild(self.rightJoyStickNode)
         
         // Listen for GameStats changes, so we update the stats
@@ -90,7 +94,42 @@ class OverlayScene: SKScene {
     }
     
     
-    
+    override func update(currentTime: NSTimeInterval) {
+        
+        var joystickValueChanged = false
+        
+        
+        let leftJoyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
+        let leftNewMax = maxJoyStickYValue - leftJoyAvg
+        
+        let newLeftJoystickAmount = Float((self.leftJoyStickNode.position.y - leftJoyAvg) / leftNewMax)
+        if (newLeftJoystickAmount != leftJoystickValue) {
+            joystickValueChanged = true
+            
+        }
+        leftJoystickValue = newLeftJoystickAmount
+        
+        
+        
+        let rightJoyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
+        let rightNewMax = maxJoyStickYValue - rightJoyAvg
+        
+        let newRightJoystickAmount = Float((self.rightJoyStickNode.position.y - rightJoyAvg) / rightNewMax)
+        if (newRightJoystickAmount != rightJoystickValue) {
+            joystickValueChanged = true
+            
+        }
+        rightJoystickValue = newRightJoystickAmount
+        
+
+        if (joystickValueChanged) {
+            let joystickValues = JoystickValues()
+            joystickValues.leftJoystickValue = leftJoystickValue
+            joystickValues.rightJoystickValue = rightJoystickValue
+            NSNotificationCenter.defaultCenter().postNotificationName(joystickValueChangedNotificationKey, object: nil, userInfo:["joystickValues": joystickValues])
+            
+        }
+    }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if (touches.count > 0) {
@@ -115,7 +154,6 @@ class OverlayScene: SKScene {
     }
     
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        var joystickValueChanged = false
         
         if (touches.count > 0) {
             for touch in touches {
@@ -127,15 +165,6 @@ class OverlayScene: SKScene {
                         self.leftJoyStickNode.position.y = maxJoyStickYValue
                     }
                     
-                    let joyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
-                    let newMax = maxJoyStickYValue - joyAvg
-
-                    let newLeftJoystickAmount = Float((self.leftJoyStickNode.position.y - joyAvg) / newMax)
-                    if (newLeftJoystickAmount != leftJoystickValue) {
-                        joystickValueChanged = true
-                        
-                    }
-                    leftJoystickValue = newLeftJoystickAmount
                 }
                 
                 
@@ -146,27 +175,12 @@ class OverlayScene: SKScene {
                     } else if (self.rightJoyStickNode.position.y > maxJoyStickYValue) {
                         self.rightJoyStickNode.position.y = maxJoyStickYValue
                     }
-                    
-                    let joyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
-                    let newMax = maxJoyStickYValue - joyAvg
-                    
-                    let newRightJoystickAmount = Float((self.rightJoyStickNode.position.y - joyAvg) / newMax)
-                    if (newRightJoystickAmount != rightJoystickValue) {
-                        joystickValueChanged = true
-                        
-                    }
-                    rightJoystickValue = newRightJoystickAmount
+                   
                 }
             }
         }
         
-        if (joystickValueChanged) {
-            let joystickValues = JoystickValues()
-            joystickValues.leftJoystickValue = leftJoystickValue
-            joystickValues.rightJoystickValue = rightJoystickValue
-            NSNotificationCenter.defaultCenter().postNotificationName(joystickValueChangedNotificationKey, object: nil, userInfo:["joystickValues": joystickValues])
-
-        }
+       
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -179,10 +193,12 @@ class OverlayScene: SKScene {
                 if (touch == self.leftJoyStickTouch) {
                     self.leftJoyStickTouch = nil
                     self.leftJoyStickNodeIsDown = false
+                    leftJoyStickNode.runAction(SKAction.moveTo(leftJoyStickDefaultLocation, duration: 0.25))
                 }
                 if (touch == self.rightJoyStickTouch) {
                     self.rightJoyStickTouch = nil
                     self.rightJoyStickNodeIsDown = false
+                    rightJoyStickNode.runAction(SKAction.moveTo(rightJoyStickDefaultLocation, duration: 0.25))
                 }
             }
         }
