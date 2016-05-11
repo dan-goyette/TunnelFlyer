@@ -22,7 +22,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let DRAW_DISTANCE : Float = 100.0
     let RING_VARIANCE_MIN : Float = -2.0
     let RING_VARIANCE_MAX : Float = 3.0
-    let CAMERA_SPEED : Float = 0.25
+    let CAMERA_SPEED : Float = 0.35
     let HEX_RING_Z_INTERVAL : Float = 5
     let SHIP_MOVEMENT_SPEED : Float = 0.5
     let SHIP_PITCH_INTERVAL : Float = 0.50
@@ -189,7 +189,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         while (self.hexRingZ - unifiedCameraShipNode.position.z > (-1 * self.DRAW_DISTANCE) ) {
             self.addTunnelSection()
             
-            if (self.hexRingZ % 15 == 0) {
+            if (self.hexRingZ % 10 == 0) {
                 createDebris()
             }
         }
@@ -255,6 +255,10 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let rotate = SCNAction.rotateByX(2.1, y: 0.3, z: 1.1, duration: 1.0)
         let rotateLoop = SCNAction.repeatActionForever(rotate)
         cubeNode.runAction(rotateLoop)
+        
+        let move = SCNAction.moveByX(CGFloat(randomBetweenNumbers( -3.0, secondNum: 3.0)), y: CGFloat(randomBetweenNumbers( -3.0, secondNum: 3.0)), z: CGFloat(randomBetweenNumbers( -3.0, secondNum: 3.0)), duration: 1)
+        let moveLoop = SCNAction.repeatActionForever(move)
+        cubeNode.runAction(moveLoop)
         
         scene.rootNode.addChildNode(cubeNode)
 
