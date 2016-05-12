@@ -25,8 +25,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let CAMERA_SPEED : Float = 0.35
     let HEX_RING_Z_INTERVAL : Float = 5
     let SHIP_MOVEMENT_SPEED : Float = 0.5
-    let SHIP_PITCH_INTERVAL : Float = 0.50
-    let SHIP_ROLL_INTERVAL : Float = 0.04
+    let SHIP_PITCH_INTERVAL : Float = 0.05
+    let SHIP_ROLL_INTERVAL : Float = 0.05
+    let SHIP_YAW_INTERVAL : Float = 0.05
     let BASE_SHIP_EULER_X : Float = -1 * Float(M_PI_2)
     
     var currentMaxDistance = 0
@@ -49,6 +50,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     var shipRoll : Float = 0
     var shipPitch : Float = 0
+    var shipYaw : Float = 0
     
     var joystickValues : JoystickValues = JoystickValues()
     
@@ -60,7 +62,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         super.viewDidLoad()
         
         unifiedCameraShipNode = SCNNode()
-        unifiedCameraShipNode.position = SCNVector3(x: 0, y: 0, z: 0)
+        //unifiedCameraShipNode.position = SCNVector3(x: 0, y: 0, z: 0)
         unifiedPitchNode = SCNNode()
         unifiedPitchNode.rotation.x = 1
         unifiedRollNode = SCNNode()
@@ -73,7 +75,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         unifiedPitchNode.addChildNode(unifiedRollNode)
         unifiedRollNode.addChildNode(unifiedYawNode)
         unifiedYawNode.addChildNode(unifiedInnerNode)
-     
+        
+        let unifiedPhysicsBody = SCNPhysicsBody(type: .Dynamic, shape: nil)
+        unifiedCameraShipNode.physicsBody = unifiedPhysicsBody
         
         
         // Create ship
@@ -119,7 +123,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // set the scene to the view
         scnView.scene = scene
         
-        //scnView.autoenablesDefaultLighting = false
+        scnView.autoenablesDefaultLighting = false
         
         // Enter render loop at every frame.
         scnView.playing = true;
@@ -194,11 +198,10 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
             }
         }
         
-        unifiedCameraShipNode.position.z -= CAMERA_SPEED
-      
 
-        shipRoll = -1.0 * (joystickValues.leftJoystickValue - joystickValues.rightJoystickValue) * SHIP_ROLL_INTERVAL
-        shipPitch =  -1.0 * (joystickValues.leftJoystickValue + joystickValues.rightJoystickValue) * SHIP_PITCH_INTERVAL
+        shipRoll = -1.0 * joystickValues.rightJoystickXValue * SHIP_ROLL_INTERVAL
+        shipPitch =  -1.0 * joystickValues.leftJoystickYValue * SHIP_PITCH_INTERVAL
+        shipYaw = -1.0 * joystickValues.leftJoystickXValue * SHIP_YAW_INTERVAL
         
         unifiedRollNode.rotation.w += shipRoll
         
@@ -208,14 +211,18 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
     
         
-        unifiedCameraShipNode.position.x += liftX
-        unifiedCameraShipNode.position.y += liftY
+        //unifiedCameraShipNode.position.x += liftX
+        //unifiedCameraShipNode.position.y += liftY
         
+        
+        unifiedPitchNode.rotation.w += shipPitch
+        unifiedYawNode.rotation.w += shipYaw
         
         
         let gameStats = GameStats()
         gameStats.shipRoll = unifiedRollNode.rotation.w
         gameStats.shipPitch = unifiedPitchNode.rotation.w
+        gameStats.shipYaw = unifiedYawNode.rotation.w
         gameStats.shipX = unifiedCameraShipNode.position.x
         gameStats.shipY = unifiedCameraShipNode.position.y
         gameStats.shipZ = unifiedCameraShipNode.position.z
@@ -229,6 +236,19 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         shipPitchNode.rotation.w = shipPitch / 3.0
         shipRollNode.rotation.w = shipRoll * 3.0
+        shipYawNode.rotation.w = shipYaw / 3.0
+        
+        
+        
+
+        // Move the ship "forward" in its direction of travel.
+        
+        //unifiedCameraShipNode.position.z -= CAMERA_SPEED
+        
+        
+        let force = SCNVector3Make(123, 1212, 1120)
+            
+        unifiedCameraShipNode.physicsBody!.applyForce(force, atPosition: SCNVector3(x: 0.05, y: 0.05, z: 0.50), impulse: false)
         
         
         //NSNotificationCenter.defaultCenter().postNotificationName(gameStatsUpdatedNotificationKey, object: nil, userInfo:["gameStats": gameStats])
@@ -470,7 +490,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         innerShipNode.addChildNode(rightTorchNode)
         
         
-        shipYawNode.addChildNode(innerShipNode)
+        shipNode.addChildNode(innerShipNode)
         
         
         
@@ -480,7 +500,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
         
         
-        unifiedYawNode.addChildNode(shipNode)
+        unifiedInnerNode.addChildNode(shipNode)
     }
     
     override func shouldAutorotate() -> Bool {

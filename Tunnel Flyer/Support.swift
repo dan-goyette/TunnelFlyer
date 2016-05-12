@@ -10,6 +10,7 @@
 class GameStats {
     var shipPitch : Float = 0.0
     var shipRoll : Float = 0.0
+    var shipYaw : Float = 0.0
     var shipX : Float = 0.0
     var shipY : Float = 0.0
     var shipZ : Float = 0.0
@@ -23,6 +24,8 @@ class GameStats {
 }
 
 class JoystickValues {
-    var leftJoystickValue : Float = 0.0
-    var rightJoystickValue : Float = 0.0
+    var leftJoystickXValue : Float = 0.0
+    var leftJoystickYValue : Float = 0.0
+    var rightJoystickXValue : Float = 0.0
+    var rightJoystickYValue : Float = 0.0
 }

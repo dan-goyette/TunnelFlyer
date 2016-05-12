@@ -27,18 +27,19 @@ class OverlayScene: SKScene {
     var diagLabel2 : SKLabelNode!
     var diagLabel3 : SKLabelNode!
 
-    var maxJoyStickYValue : CGFloat!
-    var minJoyStickYValue : CGFloat!
+    var spriteSize : CGFloat!
     
-    var leftJoystickValue : Float = 0.0
-    var rightJoystickValue : Float = 0.0
+    var leftJoystickXValue : Float = 0.0
+    var rightJoystickXValue : Float = 0.0
+    var leftJoystickYValue : Float = 0.0
+    var rightJoystickYValue : Float = 0.0
     
     override init(size: CGSize) {
         super.init(size: size)
         
         self.backgroundColor = UIColor.clearColor()
         
-        let spriteSize = size.width/15
+        spriteSize = size.width/15
         
         
         diagLabel1 = SKLabelNode()
@@ -61,16 +62,14 @@ class OverlayScene: SKScene {
         self.addChild(self.diagLabel2)
         self.addChild(self.diagLabel3)
         
-        maxJoyStickYValue = size.height - 4 * spriteSize
-        minJoyStickYValue = 4 * spriteSize
         
         leftJoyStickNode = SKSpriteNode(color: UIColor.init(red: 0.2, green: 0.2, blue: 0.2, alpha: 0.5), size: CGSizeMake(spriteSize, spriteSize))
-        leftJoyStickDefaultLocation = CGPoint(x: 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        leftJoyStickDefaultLocation = CGPoint(x: 2 * spriteSize, y: 4 * spriteSize)
         leftJoyStickNode.position = leftJoyStickDefaultLocation
         self.addChild(self.leftJoyStickNode)
         
         rightJoyStickNode = SKSpriteNode(color: UIColor.init(red: 0.2, green: 0.2, blue: 0.2, alpha: 0.5), size: CGSizeMake(spriteSize, spriteSize))
-        rightJoyStickDefaultLocation = CGPoint(x: size.width - 1.5 * spriteSize, y: (maxJoyStickYValue + minJoyStickYValue) / 2.0)
+        rightJoyStickDefaultLocation = CGPoint(x: size.width - 2 * spriteSize, y: 4 * spriteSize)
         rightJoyStickNode.position = rightJoyStickDefaultLocation
         self.addChild(self.rightJoyStickNode)
         
@@ -83,7 +82,7 @@ class OverlayScene: SKScene {
         if let gameStats = notification.userInfo?["gameStats"] as? GameStats {
             diagLabel1.text = String(format: "X: %.4f; Y: %.4f; Z: %.4f", gameStats.shipX, gameStats.shipY, gameStats.shipZ)
             diagLabel2.text = String(format: "Pitch: %.4f; Roll: %.4f; Euler X/Y/Z: %.2f/%.2f/%.2f", gameStats.shipPitch, gameStats.shipRoll, gameStats.shipEulerX, gameStats.shipEulerY, gameStats.shipEulerZ)
-            diagLabel3.text = String(format: "Left Joy: %.4f; Right Joy: %.4f; Lift X/Y: %.4f/%.4f", self.leftJoystickValue, self.rightJoystickValue, gameStats.liftX, gameStats.liftY)
+            diagLabel3.text = String(format: "Left Joy: %.4f; Right Joy: %.4f; Lift X/Y: %.4f/%.4f", self.leftJoystickYValue, self.rightJoystickYValue, gameStats.liftX, gameStats.liftY)
         }
     }
 
@@ -98,34 +97,42 @@ class OverlayScene: SKScene {
         
         var joystickValueChanged = false
         
-        
-        let leftJoyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
-        let leftNewMax = maxJoyStickYValue - leftJoyAvg
-        
-        let newLeftJoystickAmount = Float((self.leftJoyStickNode.position.y - leftJoyAvg) / leftNewMax)
-        if (newLeftJoystickAmount != leftJoystickValue) {
+        let currentLeftJoystickRelativeYValue = Float((self.leftJoyStickNode.position.y - leftJoyStickDefaultLocation.y) / spriteSize)
+        if (currentLeftJoystickRelativeYValue != leftJoystickYValue) {
             joystickValueChanged = true
             
         }
-        leftJoystickValue = newLeftJoystickAmount
-        
-        
-        
-        let rightJoyAvg = (maxJoyStickYValue + minJoyStickYValue) / 2.0
-        let rightNewMax = maxJoyStickYValue - rightJoyAvg
-        
-        let newRightJoystickAmount = Float((self.rightJoyStickNode.position.y - rightJoyAvg) / rightNewMax)
-        if (newRightJoystickAmount != rightJoystickValue) {
+        leftJoystickYValue = currentLeftJoystickRelativeYValue
+        let currentLeftJoystickRelativeXValue = Float((self.leftJoyStickNode.position.x - leftJoyStickDefaultLocation.x) / spriteSize)
+        if (currentLeftJoystickRelativeXValue != leftJoystickXValue) {
             joystickValueChanged = true
             
         }
-        rightJoystickValue = newRightJoystickAmount
+        leftJoystickXValue = currentLeftJoystickRelativeXValue
+        
+        
+      
+        let currentRightJoystickRelativeYValue = Float((self.rightJoyStickNode.position.y - rightJoyStickDefaultLocation.y) / spriteSize)
+        if (currentRightJoystickRelativeYValue != rightJoystickYValue) {
+            joystickValueChanged = true
+            
+        }
+        rightJoystickYValue = currentRightJoystickRelativeYValue
+        let currentRightJoystickRelativeXValue = Float((self.rightJoyStickNode.position.x - rightJoyStickDefaultLocation.x) / spriteSize)
+        if (currentRightJoystickRelativeXValue != rightJoystickXValue) {
+            joystickValueChanged = true
+            
+        }
+        rightJoystickXValue = currentRightJoystickRelativeXValue
+        
         
 
         if (joystickValueChanged) {
             let joystickValues = JoystickValues()
-            joystickValues.leftJoystickValue = leftJoystickValue
-            joystickValues.rightJoystickValue = rightJoystickValue
+            joystickValues.leftJoystickXValue = leftJoystickXValue
+            joystickValues.leftJoystickYValue = leftJoystickYValue
+            joystickValues.rightJoystickXValue = rightJoystickXValue
+            joystickValues.rightJoystickYValue = rightJoystickYValue
             NSNotificationCenter.defaultCenter().postNotificationName(joystickValueChangedNotificationKey, object: nil, userInfo:["joystickValues": joystickValues])
             
         }
@@ -158,24 +165,39 @@ class OverlayScene: SKScene {
         if (touches.count > 0) {
             for touch in touches {
                 if (touch == self.leftJoyStickTouch) {
+                    self.leftJoyStickNode.position.x = touch.locationInNode(self).x
                     self.leftJoyStickNode.position.y = touch.locationInNode(self).y
-                    if (self.leftJoyStickNode.position.y < minJoyStickYValue) {
-                        self.leftJoyStickNode.position.y = minJoyStickYValue
-                    } else if (self.leftJoyStickNode.position.y > maxJoyStickYValue) {
-                        self.leftJoyStickNode.position.y = maxJoyStickYValue
-                    }
                     
+                    if (self.leftJoyStickNode.position.x < leftJoyStickDefaultLocation.x - spriteSize) {
+                        self.leftJoyStickNode.position.x = leftJoyStickDefaultLocation.x - spriteSize
+                    } else if (self.leftJoyStickNode.position.x > leftJoyStickDefaultLocation.x + spriteSize) {
+                        self.leftJoyStickNode.position.x = leftJoyStickDefaultLocation.x + spriteSize
+                    }
+                    if (self.leftJoyStickNode.position.y < leftJoyStickDefaultLocation.y - spriteSize) {
+                        self.leftJoyStickNode.position.y = leftJoyStickDefaultLocation.y - spriteSize
+                    } else if (self.leftJoyStickNode.position.y > leftJoyStickDefaultLocation.y + spriteSize) {
+                        self.leftJoyStickNode.position.y = leftJoyStickDefaultLocation.y + spriteSize
+                    }
+                  
                 }
                 
                 
                 if (touch == self.rightJoyStickTouch) {
+                    self.rightJoyStickNode.position.x = touch.locationInNode(self).x
                     self.rightJoyStickNode.position.y = touch.locationInNode(self).y
-                    if (self.rightJoyStickNode.position.y < minJoyStickYValue) {
-                        self.rightJoyStickNode.position.y = minJoyStickYValue
-                    } else if (self.rightJoyStickNode.position.y > maxJoyStickYValue) {
-                        self.rightJoyStickNode.position.y = maxJoyStickYValue
+
+                    
+                    if (self.rightJoyStickNode.position.x < rightJoyStickDefaultLocation.x - spriteSize) {
+                        self.rightJoyStickNode.position.x = rightJoyStickDefaultLocation.x - spriteSize
+                    } else if (self.rightJoyStickNode.position.x > rightJoyStickDefaultLocation.x + spriteSize) {
+                        self.rightJoyStickNode.position.x = rightJoyStickDefaultLocation.x + spriteSize
                     }
-                   
+                    if (self.rightJoyStickNode.position.y < rightJoyStickDefaultLocation.y - spriteSize) {
+                        self.rightJoyStickNode.position.y = rightJoyStickDefaultLocation.y - spriteSize
+                    } else if (self.rightJoyStickNode.position.y > rightJoyStickDefaultLocation.y + spriteSize) {
+                        self.rightJoyStickNode.position.y = rightJoyStickDefaultLocation.y + spriteSize
+                    }
+                    
                 }
             }
         }
