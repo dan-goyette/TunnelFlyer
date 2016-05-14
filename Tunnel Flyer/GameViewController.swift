@@ -20,7 +20,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
     
     let DRAW_DISTANCE : Float = 100.0
-    let TUNNEL_SIZE_MULTIPLER : Float = 15
+    let RING_SIZE_MULTIPLIER : Float = 15
     let RING_VARIANCE_MIN : Float = -5.0
     let RING_VARIANCE_MAX : Float = 5.0
     let CAMERA_SPEED : Float = 0.35
@@ -41,6 +41,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     var shipPitchNode: SCNNode!
     var shipRollNode: SCNNode!
     var shipYawNode: SCNNode!
+    
+    
+    
     
     var unifiedCameraShipNode : SCNNode!
     
@@ -155,18 +158,18 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
 
         
-        ring.append(SCNVector3Make(-3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(-2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(-1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(-1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
-        ring.append(SCNVector3Make(-2 * TUNNEL_SIZE_MULTIPLER +  getHexVariance(), -1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-3 * RING_SIZE_MULTIPLIER + getHexVariance(), 0 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-2 * RING_SIZE_MULTIPLIER + getHexVariance(), 1 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-1 * RING_SIZE_MULTIPLIER + getHexVariance(), 2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 * RING_SIZE_MULTIPLIER + getHexVariance(), 3 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(1 * RING_SIZE_MULTIPLIER + getHexVariance(), 2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(2 * RING_SIZE_MULTIPLIER + getHexVariance(), 1 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(3 * RING_SIZE_MULTIPLIER + getHexVariance(), 0 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(2 * RING_SIZE_MULTIPLIER + getHexVariance(), -1 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(1 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 * RING_SIZE_MULTIPLIER + getHexVariance(), -3 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-1 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-2 * RING_SIZE_MULTIPLIER +  getHexVariance(), -1 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
 
 
         return ring
@@ -190,7 +193,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         }
         
 
-        shipRoll = 1.0 * exaggerate( joystickValues.rightJoystickXValue) * SHIP_ROLL_INTERVAL
+        shipRoll = -1.0 * exaggerate( joystickValues.rightJoystickXValue) * SHIP_ROLL_INTERVAL
         shipPitch =  -1.0 * exaggerate( joystickValues.leftJoystickYValue) *  SHIP_PITCH_INTERVAL
         shipYaw = -1.0 * exaggerate( joystickValues.leftJoystickXValue)  * SHIP_YAW_INTERVAL
         
@@ -206,9 +209,6 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         
         let gameStats = GameStats()
-//        gameStats.shipRoll = unifiedRollNode.rotation.w
-//        gameStats.shipPitch = unifiedPitchNode.rotation.w
-//        gameStats.shipYaw = unifiedYawNode.rotation.w
         gameStats.shipX = unifiedCameraShipNode.position.x
         gameStats.shipY = unifiedCameraShipNode.position.y
         gameStats.shipZ = unifiedCameraShipNode.position.z
@@ -218,9 +218,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         gameStats.shipEulerZ = unifiedCameraShipNode.eulerAngles.z
         
         
-        shipPitchNode.rotation.w = shipPitch / 3.0
-        shipRollNode.rotation.w = shipRoll * 3.0
-        shipYawNode.rotation.w = shipYaw / 3.0
+        shipPitchNode.rotation.w = shipPitch
+        shipRollNode.rotation.w = shipRoll
+        shipYawNode.rotation.w = shipYaw
         
         
         
@@ -514,7 +514,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         innerShipNode.addChildNode(rightTorchNode)
         
         
-        shipNode.addChildNode(innerShipNode)
+        shipYawNode.addChildNode(innerShipNode)
         
         
         
