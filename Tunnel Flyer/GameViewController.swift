@@ -19,10 +19,10 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let scene = SCNScene()
 
     
-    let DRAW_DISTANCE : Float = 100.0
-    let RING_SIZE_MULTIPLIER : Float = 15
-    let RING_VARIANCE_MIN : Float = -5.0
-    let RING_VARIANCE_MAX : Float = 5.0
+    let DRAW_DISTANCE : Float = 200.0
+    let RING_SIZE_MULTIPLIER : Float = 20
+    let RING_VARIANCE_MIN : Float = -8.0
+    let RING_VARIANCE_MAX : Float = 8.0
     let CAMERA_SPEED : Float = 0.35
     let HEX_RING_Z_INTERVAL : Float = 5
     let SHIP_MOVEMENT_SPEED : Float = 80.0
@@ -79,8 +79,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         // create and add a camera to the scene
         cameraNode.camera = SCNCamera()
+        cameraNode.camera!.zFar = 200
         // Relative to the unified camera ship, the camera is 15z closer to the viewer.
-        cameraNode.position = SCNVector3(x: 0, y: 2, z: 10)
+        cameraNode.position = SCNVector3(x: 0, y: 4, z: 15)
         
         let cameraConstraint = SCNLookAtConstraint(target: shipNode)
         cameraConstraint.gimbalLockEnabled = true
@@ -187,8 +188,8 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         while (self.hexRingZ - unifiedCameraShipNode.presentationNode.position.z > (-1 * self.DRAW_DISTANCE) ) {
             self.addTunnelSection()
             
-            if (self.hexRingZ % 10 == 0) {
-                createDebris()
+            if (self.hexRingZ % 15 == 0) {
+               // createDebris()
             }
         }
         
@@ -278,8 +279,8 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let cubeNode = SCNNode(geometry: cube)
         cubeNode.position.z = self.hexRingZ
         
-        cubeNode.position.x = randomBetweenNumbers( -12.0, secondNum: 12.0)
-        cubeNode.position.y = randomBetweenNumbers( -12.0, secondNum: 12.0)
+        cubeNode.position.x = randomBetweenNumbers( -1 * RING_SIZE_MULTIPLIER, secondNum: RING_SIZE_MULTIPLIER)
+        cubeNode.position.y = randomBetweenNumbers( -1 * RING_SIZE_MULTIPLIER, secondNum: RING_SIZE_MULTIPLIER)
         cubeNode.position.z = self.hexRingZ
 
         
