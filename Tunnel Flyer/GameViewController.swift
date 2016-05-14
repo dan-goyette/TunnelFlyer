@@ -20,8 +20,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
     
     let DRAW_DISTANCE : Float = 100.0
-    let RING_VARIANCE_MIN : Float = -2.0
-    let RING_VARIANCE_MAX : Float = 3.0
+    let TUNNEL_SIZE_MULTIPLER : Float = 15
+    let RING_VARIANCE_MIN : Float = -5.0
+    let RING_VARIANCE_MAX : Float = 5.0
     let CAMERA_SPEED : Float = 0.35
     let HEX_RING_Z_INTERVAL : Float = 5
     let SHIP_MOVEMENT_SPEED : Float = 80.0
@@ -30,6 +31,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let SHIP_ROLL_INTERVAL : Float = 0.5
     let SHIP_YAW_INTERVAL : Float = 0.5
     let BASE_SHIP_EULER_X : Float = -1 * Float(M_PI_2)
+    
     
     var currentMaxDistance = 0
     
@@ -153,18 +155,18 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
 
         
-        ring.append(SCNVector3Make(-24 +  getHexVariance(), 0 + getHexVariance(), z))
-        ring.append(SCNVector3Make(-16 +  getHexVariance(), 6 + getHexVariance(), z))
-        ring.append(SCNVector3Make(-8 + getHexVariance(), 12 + getHexVariance(), z))
-        ring.append(SCNVector3Make(0 + getHexVariance(), 18 + getHexVariance(), z))
-        ring.append(SCNVector3Make(8 + getHexVariance(), 12 + getHexVariance(), z))
-        ring.append(SCNVector3Make(16 + getHexVariance(), 6 + getHexVariance(), z))
-        ring.append(SCNVector3Make(24 + getHexVariance(), 0 + getHexVariance(), z))
-        ring.append(SCNVector3Make(16 + getHexVariance(), -6 + getHexVariance(), z))
-        ring.append(SCNVector3Make(8 + getHexVariance(), -12 + getHexVariance(), z))
-        ring.append(SCNVector3Make(0 + getHexVariance(), -18 + getHexVariance(), z))
-        ring.append(SCNVector3Make(-8 + getHexVariance(), -12 + getHexVariance(), z))
-        ring.append(SCNVector3Make(-16 +  getHexVariance(), -6 + getHexVariance(), z))
+        ring.append(SCNVector3Make(-3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), 0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(0 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -3 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), -2 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
+        ring.append(SCNVector3Make(-2 * TUNNEL_SIZE_MULTIPLER +  getHexVariance(), -1 * TUNNEL_SIZE_MULTIPLER + getHexVariance(), z))
 
 
         return ring
@@ -344,8 +346,8 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         let material = SCNMaterial()
         material.doubleSided = true
-        material.diffuse.contents = getRandomColor()
-        
+        material.diffuse.contents = getRandomShadeOfColor(UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 ), isLight: false)
+
 
         
         triangle.materials = [material]
@@ -360,6 +362,19 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let randomGreen:CGFloat = CGFloat(drand48())
         let randomBlue:CGFloat = CGFloat(drand48())
         return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
+    }
+    
+    func getRandomShadeOfColor(color : UIColor, isLight : Bool = true) -> UIColor {
+        var h : CGFloat = 0
+        var s : CGFloat = 0
+        var l : CGFloat = 0
+        var a : CGFloat = 0
+        color.getHue(&h, saturation: &s, brightness: &l, alpha: &a)
+        
+        
+        let adjust = isLight ? CGFloat(randomBetweenNumbers(65, secondNum: 80)) : CGFloat(randomBetweenNumbers(5, secondNum: 25))
+        return UIColor(hue: h, saturation: s, brightness: adjust / 100.0, alpha: a)
+        
     }
     
     func handleTap(gestureRecognize: UIGestureRecognizer) {
