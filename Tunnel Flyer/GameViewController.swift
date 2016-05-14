@@ -24,10 +24,11 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let RING_VARIANCE_MAX : Float = 3.0
     let CAMERA_SPEED : Float = 0.35
     let HEX_RING_Z_INTERVAL : Float = 5
-    let SHIP_MOVEMENT_SPEED : Float = 0.5
-    let SHIP_PITCH_INTERVAL : Float = 0.05
-    let SHIP_ROLL_INTERVAL : Float = 0.05
-    let SHIP_YAW_INTERVAL : Float = 0.05
+    let SHIP_MOVEMENT_SPEED : Float = 80.0
+    let SHIP_TERMINAL_SPEED : Float = 100.0
+    let SHIP_PITCH_INTERVAL : Float = 0.5
+    let SHIP_ROLL_INTERVAL : Float = 0.5
+    let SHIP_YAW_INTERVAL : Float = 0.5
     let BASE_SHIP_EULER_X : Float = -1 * Float(M_PI_2)
     
     var currentMaxDistance = 0
@@ -40,11 +41,6 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     var shipYawNode: SCNNode!
     
     var unifiedCameraShipNode : SCNNode!
-    var unifiedPitchNode: SCNNode!
-    var unifiedRollNode: SCNNode!
-    var unifiedYawNode: SCNNode!
-    var unifiedInnerNode: SCNNode!
-    
     
     var cameraNode = SCNNode()
     
@@ -61,39 +57,31 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        unifiedCameraShipNode = SCNNode()
-        //unifiedCameraShipNode.position = SCNVector3(x: 0, y: 0, z: 0)
-        unifiedPitchNode = SCNNode()
-        unifiedPitchNode.rotation.x = 1
-        unifiedRollNode = SCNNode()
-        unifiedRollNode.rotation.z = 1
-        unifiedYawNode = SCNNode()
-        unifiedYawNode.rotation.y = 1
-        unifiedInnerNode = SCNNode()
-        
-        unifiedCameraShipNode.addChildNode(unifiedPitchNode)
-        unifiedPitchNode.addChildNode(unifiedRollNode)
-        unifiedRollNode.addChildNode(unifiedYawNode)
-        unifiedYawNode.addChildNode(unifiedInnerNode)
-        
+        // If the unified node doesn't have some underlying shape, then the physics simulation won't be applied to it.
+        let unifiedCameraShipNodeShape = SCNShape()
+        unifiedCameraShipNode = SCNNode(geometry: unifiedCameraShipNodeShape)
         let unifiedPhysicsBody = SCNPhysicsBody(type: .Dynamic, shape: nil)
+        unifiedPhysicsBody.angularDamping = 0.999
+        unifiedPhysicsBody.damping = 0.9
         unifiedCameraShipNode.physicsBody = unifiedPhysicsBody
-        
+        unifiedPhysicsBody.affectedByGravity = false
         
         // Create ship
         createShip()
+        
+       
      
         
         // create and add a camera to the scene
         cameraNode.camera = SCNCamera()
         // Relative to the unified camera ship, the camera is 15z closer to the viewer.
-        cameraNode.position = SCNVector3(x: 0, y: 4, z: 15)
+        cameraNode.position = SCNVector3(x: 0, y: 2, z: 10)
         
         let cameraConstraint = SCNLookAtConstraint(target: shipNode)
         cameraConstraint.gimbalLockEnabled = true
         cameraNode.constraints = [cameraConstraint]
         
-        unifiedInnerNode.addChildNode(cameraNode)
+        unifiedCameraShipNode.addChildNode(cameraNode)
         
         
         scene.rootNode.addChildNode(unifiedCameraShipNode)
@@ -137,6 +125,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // configure the view
         scnView.backgroundColor = UIColor.blackColor()
 
+        //scnView.debugOptions = .ShowPhysicsShapes
         
         
         createHudScene()
@@ -190,7 +179,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     func renderer(renderer: SCNSceneRenderer, updateAtTime time: NSTimeInterval) {
         
         // If the last ring is too close, draw another ring.
-        while (self.hexRingZ - unifiedCameraShipNode.position.z > (-1 * self.DRAW_DISTANCE) ) {
+        while (self.hexRingZ - unifiedCameraShipNode.presentationNode.position.z > (-1 * self.DRAW_DISTANCE) ) {
             self.addTunnelSection()
             
             if (self.hexRingZ % 10 == 0) {
@@ -199,30 +188,25 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         }
         
 
-        shipRoll = -1.0 * joystickValues.rightJoystickXValue * SHIP_ROLL_INTERVAL
-        shipPitch =  -1.0 * joystickValues.leftJoystickYValue * SHIP_PITCH_INTERVAL
-        shipYaw = -1.0 * joystickValues.leftJoystickXValue * SHIP_YAW_INTERVAL
+        shipRoll = 1.0 * exaggerate( joystickValues.rightJoystickXValue) * SHIP_ROLL_INTERVAL
+        shipPitch =  -1.0 * exaggerate( joystickValues.leftJoystickYValue) *  SHIP_PITCH_INTERVAL
+        shipYaw = -1.0 * exaggerate( joystickValues.leftJoystickXValue)  * SHIP_YAW_INTERVAL
         
-        unifiedRollNode.rotation.w += shipRoll
-        
-        let liftX = sin( unifiedRollNode.rotation.w ) * shipPitch * SHIP_MOVEMENT_SPEED * -1
-        let liftY = cos( unifiedRollNode.rotation.w ) * shipPitch * SHIP_MOVEMENT_SPEED
-        
-        
+        let speedVector = SCNVector3ToGLKVector3(unifiedCameraShipNode.physicsBody!.velocity)
+        let speed = GLKVector3Length(speedVector)
+  
     
-        
-        //unifiedCameraShipNode.position.x += liftX
-        //unifiedCameraShipNode.position.y += liftY
+        let shipSpeed = -1 * SHIP_MOVEMENT_SPEED - SHIP_MOVEMENT_SPEED * (1 + joystickValues.rightJoystickYValue) * (max(0, (SHIP_TERMINAL_SPEED - speed)) / SHIP_TERMINAL_SPEED)
         
         
-        unifiedPitchNode.rotation.w += shipPitch
-        unifiedYawNode.rotation.w += shipYaw
+        
+        // Adjust ship speed to reduce it as the ship approaches terminal velocity.
         
         
         let gameStats = GameStats()
-        gameStats.shipRoll = unifiedRollNode.rotation.w
-        gameStats.shipPitch = unifiedPitchNode.rotation.w
-        gameStats.shipYaw = unifiedYawNode.rotation.w
+//        gameStats.shipRoll = unifiedRollNode.rotation.w
+//        gameStats.shipPitch = unifiedPitchNode.rotation.w
+//        gameStats.shipYaw = unifiedYawNode.rotation.w
         gameStats.shipX = unifiedCameraShipNode.position.x
         gameStats.shipY = unifiedCameraShipNode.position.y
         gameStats.shipZ = unifiedCameraShipNode.position.z
@@ -231,8 +215,6 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         gameStats.shipEulerY = unifiedCameraShipNode.eulerAngles.y
         gameStats.shipEulerZ = unifiedCameraShipNode.eulerAngles.z
         
-        gameStats.liftX = liftX
-        gameStats.liftY = liftY
         
         shipPitchNode.rotation.w = shipPitch / 3.0
         shipRollNode.rotation.w = shipRoll * 3.0
@@ -243,18 +225,45 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
         // Move the ship "forward" in its direction of travel.
         
-        //unifiedCameraShipNode.position.z -= CAMERA_SPEED
+        let forwardForce = SCNVector3Make(0, 0, shipSpeed )
+        
+        let rotationVector = unifiedCameraShipNode.presentationNode.rotation
+        
+        unifiedCameraShipNode.physicsBody!.applyForce(applyRotationToVector(rotationVector, vector: forwardForce), atPosition: applyRotationToVector(rotationVector, vector: SCNVector3(x: 0.0, y: 0.0, z: 0.0)), impulse: false)
         
         
-        let force = SCNVector3Make(123, 1212, 1120)
-            
-        unifiedCameraShipNode.physicsBody!.applyForce(force, atPosition: SCNVector3(x: 0.05, y: 0.05, z: 0.50), impulse: false)
+        let yawForce = SCNVector3Make(shipYaw, 0, 0)
+        unifiedCameraShipNode.physicsBody!.applyForce(applyRotationToVector(rotationVector, vector: yawForce), atPosition: applyRotationToVector(rotationVector, vector: SCNVector3(x: 0.0, y: 0.0, z: 1.0)), impulse: false)
+        
+        let pitchForce = SCNVector3Make(0, shipPitch, 0)
+        unifiedCameraShipNode.physicsBody!.applyForce(applyRotationToVector(rotationVector, vector: pitchForce), atPosition: applyRotationToVector(rotationVector, vector: SCNVector3(x: 0.0, y: 0.0, z: -1.0)), impulse: false)
+        
+        let rollForce = SCNVector3Make(0, shipRoll, 0 )
+        unifiedCameraShipNode.physicsBody!.applyForce(applyRotationToVector(rotationVector, vector: rollForce), atPosition: applyRotationToVector(rotationVector, vector: SCNVector3(x: -1, y: 0, z: 0.0)), impulse: false)
+        
+        
+        
         
         
         //NSNotificationCenter.defaultCenter().postNotificationName(gameStatsUpdatedNotificationKey, object: nil, userInfo:["gameStats": gameStats])
 
     }
+    
+    func exaggerate(value : Float) -> Float {
+        return powf(value, 3)// * getSign(value)
+    }
 
+    func getSign(value : Float) -> Float {
+        return value < 0 ? -1 : 1
+    }
+    
+    func applyRotationToVector(rotation : SCNVector4, vector: SCNVector3) -> SCNVector3 {
+        let rotationMatrix = SCNMatrix4MakeRotation(rotation.w, rotation.x, rotation.y, rotation.z)
+        let glkMatrix = SCNMatrix4ToGLKMatrix4(rotationMatrix)
+        let glkVector = SCNVector3ToGLKVector3(vector)
+        let resultVector = GLKMatrix4MultiplyVector3(glkMatrix, glkVector)
+        return SCNVector3FromGLKVector3(resultVector)
+    }
     
     func createDebris() {
         let cube = SCNBox(width: 5, height: 5, length: 5, chamferRadius: 2)
@@ -500,7 +509,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 
         
         
-        unifiedInnerNode.addChildNode(shipNode)
+        unifiedCameraShipNode.addChildNode(shipNode)
     }
     
     override func shouldAutorotate() -> Bool {

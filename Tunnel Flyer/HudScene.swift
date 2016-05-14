@@ -82,7 +82,7 @@ class OverlayScene: SKScene {
         if let gameStats = notification.userInfo?["gameStats"] as? GameStats {
             diagLabel1.text = String(format: "X: %.4f; Y: %.4f; Z: %.4f", gameStats.shipX, gameStats.shipY, gameStats.shipZ)
             diagLabel2.text = String(format: "Pitch: %.4f; Roll: %.4f; Euler X/Y/Z: %.2f/%.2f/%.2f", gameStats.shipPitch, gameStats.shipRoll, gameStats.shipEulerX, gameStats.shipEulerY, gameStats.shipEulerZ)
-            diagLabel3.text = String(format: "Left Joy: %.4f; Right Joy: %.4f; Lift X/Y: %.4f/%.4f", self.leftJoystickYValue, self.rightJoystickYValue, gameStats.liftX, gameStats.liftY)
+            diagLabel3.text = String(format: "Left Joy: %.4f; Right Joy: %.4f;", self.leftJoystickYValue, self.rightJoystickYValue)
         }
     }
 

@@ -19,8 +19,6 @@ class GameStats {
     var shipEulerY : Float = 0.0
     var shipEulerZ : Float = 0.0
     
-    var liftX : Float = 0.0
-    var liftY : Float = 0.0
 }
 
 class JoystickValues {
