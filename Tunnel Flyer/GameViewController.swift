@@ -92,18 +92,18 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         scene.rootNode.addChildNode(unifiedCameraShipNode)
 
         // create and add a light to the scene
-        let lightNode = SCNNode()
-        lightNode.light = SCNLight()
-        lightNode.light!.type = SCNLightTypeOmni
-        lightNode.position = SCNVector3(x: 0, y: 10, z: 10)
-        scene.rootNode.addChildNode(lightNode)
-        
-        // create and add an ambient light to the scene
-        let ambientLightNode = SCNNode()
-        ambientLightNode.light = SCNLight()
-        ambientLightNode.light!.type = SCNLightTypeAmbient
-        ambientLightNode.light!.color = UIColor.darkGrayColor()
-        scene.rootNode.addChildNode(ambientLightNode)
+//        let lightNode = SCNNode()
+//        lightNode.light = SCNLight()
+//        lightNode.light!.type = SCNLightTypeOmni
+//        lightNode.position = SCNVector3(x: 0, y: 0, z: 0)
+//        scene.rootNode.addChildNode(lightNode)
+//        
+//        // create and add an ambient light to the scene
+//        let ambientLightNode = SCNNode()
+//        ambientLightNode.light = SCNLight()
+//        ambientLightNode.light!.type = SCNLightTypeAmbient
+//        ambientLightNode.light!.color = UIColor.darkGrayColor()
+//        scene.rootNode.addChildNode(ambientLightNode)
       
         
         // retrieve the SCNView
@@ -168,6 +168,19 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         ring.append(SCNVector3Make(0 * RING_SIZE_MULTIPLIER + getHexVariance(), -3 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
         ring.append(SCNVector3Make(-1 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
         ring.append(SCNVector3Make(-2 * RING_SIZE_MULTIPLIER +  getHexVariance(), -1 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+
+        
+        
+//        ring.append(SCNVector3Make(-3 * RING_SIZE_MULTIPLIER + getHexVariance(), 0 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+//        
+//        ring.append(SCNVector3Make(-1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), 2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+//        ring.append(SCNVector3Make(1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), 2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+//        
+//        
+//        ring.append(SCNVector3Make(3 * RING_SIZE_MULTIPLIER + getHexVariance(), 0 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+//        ring.append(SCNVector3Make(-1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+//        ring.append(SCNVector3Make(1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
+        
 
 
         return ring
@@ -277,10 +290,10 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     func createDebris() {
         
-        let cube = SCNBox(width: 5, height: 5, length: 5, chamferRadius: 2)
+        let cube = SCNBox(width: 5, height: 5, length: 5, chamferRadius: 0)
         
         let material = SCNMaterial()
-        material.doubleSided = true
+        //material.doubleSided = true
         material.diffuse.contents = getRandomColor()
         
         cube.materials = [material]
@@ -343,27 +356,52 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     func addTriangleFromPositions(scene: SCNScene, point1: SCNVector3, point2: SCNVector3, point3: SCNVector3)
     {
-        let positions: [Float32] = [point1.x, point1.y, point1.z, point2.x, point2.y, point2.z, point3.x, point3.y, point3.z,]
-        let positionData = NSData(bytes: positions, length: sizeof(Float32)*positions.count)
-        let indices: [Int32] = [0, 1, 2]
+//        let positions: [Float32] = [point1.x, point1.y, point1.z, point2.x, point2.y, point2.z, point3.x, point3.y, point3.z]
+//        let positionData = NSData(bytes: positions, length: sizeof(Float32)*positions.count)
+//        let indices: [Int32] = [0, 1, 2]
+//        let indexData = NSData(bytes: indices, length: sizeof(Int32) * indices.count)
+//        
+//        let source = SCNGeometrySource(data: positionData, semantic: SCNGeometrySourceSemanticVertex, vectorCount: indices.count, floatComponents: true, componentsPerVector: 3, bytesPerComponent: sizeof(Float32), dataOffset: 0, dataStride: sizeof(Float32) * 3)
+//        //let normalSource = SCNGeometrySource(normals: [SCNVector3Make(0, -1, 0), SCNVector3Make(0, -1, 0), SCNVector3Make(0, -1, 0)], count: 3)
+//        let element = SCNGeometryElement(data: indexData, primitiveType: SCNGeometryPrimitiveType.Triangles, primitiveCount: indices.count, bytesPerIndex: sizeof(Int32))
+//        
+//        let triangle = SCNGeometry(sources: [source], elements: [element])
+//        
+//        let material = SCNMaterial()
+//        material.doubleSided = true
+//        material.diffuse.contents =  UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 )  // getRandomShadeOfColor(UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 ), lighter: false)
+//
+//        
+//        triangle.materials = [material]
+//        let shapeNode = SCNNode(geometry: triangle)
+//        tunnelNodes.append(NodePositionReference(n: shapeNode, p: point1))
+//        scene.rootNode.addChildNode(shapeNode)
+        
+        
+        
+        let vector12 = GLKVector3Make(point1.x - point2.x, point1.y - point2.y, point1.z - point2.z)
+        let vector32 = GLKVector3Make(point3.x - point2.x, point3.y - point2.y, point3.z - point2.z)
+        let normalVector = SCNVector3FromGLKVector3(GLKVector3CrossProduct(vector12, vector32))
+        
+        
+        let positions: [SCNVector3] = [point1, point2, point3]
+        let normals: [SCNVector3] = [normalVector, normalVector, normalVector]
+        let indices: [Int32] = [0, 2, 1]
+        let vertexSource = SCNGeometrySource(vertices: positions, count: positions.count)
+        let normalSource = SCNGeometrySource(normals: normals, count: normals.count)
         let indexData = NSData(bytes: indices, length: sizeof(Int32) * indices.count)
         
-        let source = SCNGeometrySource(data: positionData, semantic: SCNGeometrySourceSemanticVertex, vectorCount: indices.count, floatComponents: true, componentsPerVector: 3, bytesPerComponent: sizeof(Float32), dataOffset: 0, dataStride: sizeof(Float32) * 3)
-        let element = SCNGeometryElement(data: indexData, primitiveType: SCNGeometryPrimitiveType.Triangles, primitiveCount: indices.count, bytesPerIndex: sizeof(Int32))
-        
-        let triangle = SCNGeometry(sources: [source], elements: [element])
+        let element = SCNGeometryElement(data: indexData, primitiveType: .Triangles, primitiveCount: indices.count, bytesPerIndex: sizeof(Int32))
+        let geometry = SCNGeometry(sources: [vertexSource, normalSource], elements: [element])
         
         let material = SCNMaterial()
-        material.doubleSided = true
-        material.diffuse.contents = getRandomShadeOfColor(UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 ), lighter: false)
-
-
+        //material.doubleSided = true
+        material.diffuse.contents = UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 )//  getRandomShadeOfColor(UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 ), lighter: false)
         
-        triangle.materials = [material]
-        let shapeNode = SCNNode(geometry: triangle)
+        geometry.materials = [material]
+        let shapeNode = SCNNode(geometry: geometry)
         tunnelNodes.append(NodePositionReference(n: shapeNode, p: point1))
         scene.rootNode.addChildNode(shapeNode)
-
     }
     
     
@@ -465,6 +503,26 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         leftWingNode.position.y = -0.5
         leftWingNode.position.x = -1.5
         leftWingNode.eulerAngles.z = Float(M_PI_2 )
+        
+        
+        // Left Globe Node
+        let leftGlobeNodeGeometry = SCNSphere(radius: 0.15)
+        let leftGlobeNodeMaterial = SCNMaterial()
+        leftGlobeNodeMaterial.emission.contents = UIColor.cyanColor()
+        leftGlobeNodeGeometry.materials = [leftGlobeNodeMaterial]
+        let leftGlobeNode = SCNNode(geometry: leftGlobeNodeGeometry)
+        leftGlobeNode.position = SCNVector3Make(0, 2, 0)
+        let leftGlobeLight = SCNLight()
+        leftGlobeLight.type = SCNLightTypeSpot
+        leftGlobeLight.color = UIColor.cyanColor()
+        leftGlobeLight.spotInnerAngle = 160.0
+        leftGlobeLight.spotOuterAngle = 240.0
+        leftGlobeNode.light = leftGlobeLight
+        leftGlobeNode.eulerAngles.x = Float(M_PI_2)
+        leftGlobeNode.eulerAngles.z = Float( -1 * M_PI_4)
+        leftWingNode.addChildNode(leftGlobeNode)
+
+        
 
         
         // Right Wing
@@ -479,6 +537,27 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         
         
+        // right Globe Node
+        let rightGlobeNodeGeometry = SCNSphere(radius: 0.15)
+        let rightGlobeNodeMaterial = SCNMaterial()
+        rightGlobeNodeMaterial.emission.contents = UIColor.cyanColor()
+        rightGlobeNodeGeometry.materials = [rightGlobeNodeMaterial]
+        let rightGlobeNode = SCNNode(geometry: rightGlobeNodeGeometry)
+        rightGlobeNode.position = SCNVector3Make(0, 2, 0)
+        let rightGlobeLight = SCNLight()
+        rightGlobeLight.type = SCNLightTypeSpot
+        rightGlobeLight.color = UIColor.cyanColor()
+        rightGlobeLight.spotInnerAngle = 160
+        rightGlobeLight.spotOuterAngle = 240.0
+        rightGlobeNode.light = rightGlobeLight
+        
+        rightGlobeNode.eulerAngles.x = Float( M_PI_2)
+        rightGlobeNode.eulerAngles.z = Float( M_PI_4)
+        rightWingNode.addChildNode(rightGlobeNode)
+
+        
+        
+        
         // Left torch
         let leftTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
         let leftTorchMaterial = SCNMaterial()
@@ -487,17 +566,18 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let leftTorchNode = SCNNode(geometry: leftTorchGeometry)
         leftTorchNode.position.y = 2
         leftTorchNode.position.x = -0.75
+        leftTorchNode.eulerAngles.x = Float(M_PI_2)
         
-
-        leftTorchNode.light = SCNLight()
-        leftTorchNode.light!.type = SCNLightTypeDirectional
-        leftTorchNode.light!.color = UIColor.redColor()
-
+        let leftTorchLight = SCNLight()
+        leftTorchLight.type = SCNLightTypeSpot
+        leftTorchLight.spotInnerAngle = 15.0
+        leftTorchLight.spotOuterAngle = 60.0
+        leftTorchLight.castsShadow = false
+        //leftTorchLight.color = UIColor(white: 0.5, alpha: 0.5)
+        leftTorchNode.light = leftTorchLight
         
         
-        
-        
-        // Left torch
+        // Right torch
         let rightTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
         let rightTorchMaterial = SCNMaterial()
         rightTorchMaterial.diffuse.contents = UIColor.blackColor()
@@ -505,16 +585,22 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let rightTorchNode = SCNNode(geometry: rightTorchGeometry)
         rightTorchNode.position.y = 2
         rightTorchNode.position.x = 0.75
-
+        rightTorchNode.eulerAngles.x = Float(M_PI_2)
+        
         let rightTorchLight = SCNLight()
         rightTorchLight.type = SCNLightTypeSpot
-        rightTorchLight.color = UIColor.redColor()
-        rightTorchLight.castsShadow = true
-        rightTorchLight.attenuationEndDistance = 30
+        rightTorchLight.spotInnerAngle = 15.0
+        rightTorchLight.spotOuterAngle = 60.0
+        rightTorchLight.castsShadow = false
+        //rightTorchLight.color =  UIColor(white: 0.5, alpha: 0.5)
         rightTorchNode.light = rightTorchLight
 
         
+   
         
+        
+        
+        // Inner Node, contains all the ship parts.
         let innerShipNode = SCNNode()
         innerShipNode.addChildNode(mainShipPyramidNode)
         innerShipNode.addChildNode(thrusterBoxNode)
@@ -531,8 +617,20 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         // Flip the ship so it's facing forward
         innerShipNode.eulerAngles.x = BASE_SHIP_EULER_X
-
         
+        
+        
+        
+//        let spotLight = SCNLight()
+//        spotLight.type = SCNLightTypeSpot
+//        spotLight.spotInnerAngle = 15.0
+//        spotLight.spotOuterAngle = 60.0
+//        spotLight.castsShadow = true
+//        let spotLightNode = SCNNode()
+//        spotLightNode.light = spotLight
+//        spotLightNode.position = SCNVector3(1.5, 1.5, 1.5)
+//
+//        shipNode.addChildNode(spotLightNode)
         
         unifiedCameraShipNode.addChildNode(shipNode)
     }
