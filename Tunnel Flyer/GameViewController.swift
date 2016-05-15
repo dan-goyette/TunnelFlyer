@@ -98,12 +98,12 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 //        lightNode.position = SCNVector3(x: 0, y: 0, z: 0)
 //        scene.rootNode.addChildNode(lightNode)
 //        
-//        // create and add an ambient light to the scene
-//        let ambientLightNode = SCNNode()
-//        ambientLightNode.light = SCNLight()
-//        ambientLightNode.light!.type = SCNLightTypeAmbient
-//        ambientLightNode.light!.color = UIColor.darkGrayColor()
-//        scene.rootNode.addChildNode(ambientLightNode)
+        // create and add an ambient light to the scene
+        let ambientLightNode = SCNNode()
+        ambientLightNode.light = SCNLight()
+        ambientLightNode.light!.type = SCNLightTypeAmbient
+        ambientLightNode.light!.color = UIColor.darkGrayColor()
+        scene.rootNode.addChildNode(ambientLightNode)
       
         
         // retrieve the SCNView
@@ -290,7 +290,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     func createDebris() {
         
-        let cube = SCNBox(width: 5, height: 5, length: 5, chamferRadius: 0)
+        let cube = SCNBox(width: 4, height: 4, length: 4, chamferRadius: 1.3)
         
         let material = SCNMaterial()
         //material.doubleSided = true
@@ -506,21 +506,21 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         
         // Left Globe Node
-        let leftGlobeNodeGeometry = SCNSphere(radius: 0.15)
-        let leftGlobeNodeMaterial = SCNMaterial()
-        leftGlobeNodeMaterial.emission.contents = UIColor.cyanColor()
-        leftGlobeNodeGeometry.materials = [leftGlobeNodeMaterial]
-        let leftGlobeNode = SCNNode(geometry: leftGlobeNodeGeometry)
-        leftGlobeNode.position = SCNVector3Make(0, 2, 0)
-        let leftGlobeLight = SCNLight()
-        leftGlobeLight.type = SCNLightTypeSpot
-        leftGlobeLight.color = UIColor.cyanColor()
-        leftGlobeLight.spotInnerAngle = 160.0
-        leftGlobeLight.spotOuterAngle = 240.0
-        leftGlobeNode.light = leftGlobeLight
-        leftGlobeNode.eulerAngles.x = Float(M_PI_2)
-        leftGlobeNode.eulerAngles.z = Float( -1 * M_PI_4)
-        leftWingNode.addChildNode(leftGlobeNode)
+//        let leftGlobeNodeGeometry = SCNSphere(radius: 0.15)
+//        let leftGlobeNodeMaterial = SCNMaterial()
+//        leftGlobeNodeMaterial.emission.contents = UIColor.cyanColor()
+//        leftGlobeNodeGeometry.materials = [leftGlobeNodeMaterial]
+//        let leftGlobeNode = SCNNode(geometry: leftGlobeNodeGeometry)
+//        leftGlobeNode.position = SCNVector3Make(0, 2, 0)
+//        let leftGlobeLight = SCNLight()
+//        leftGlobeLight.type = SCNLightTypeOmni
+//        leftGlobeLight.color = UIColor.cyanColor()
+//        leftGlobeLight.attenuationStartDistance = 80
+//        leftGlobeLight.attenuationEndDistance = 120
+//        leftGlobeNode.light = leftGlobeLight
+//        leftGlobeNode.eulerAngles.x = Float(M_PI_2)
+//        leftGlobeNode.eulerAngles.z = Float( -1 * M_PI_4)
+//        leftWingNode.addChildNode(leftGlobeNode)
 
         
 
@@ -538,22 +538,22 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         
         // right Globe Node
-        let rightGlobeNodeGeometry = SCNSphere(radius: 0.15)
-        let rightGlobeNodeMaterial = SCNMaterial()
-        rightGlobeNodeMaterial.emission.contents = UIColor.cyanColor()
-        rightGlobeNodeGeometry.materials = [rightGlobeNodeMaterial]
-        let rightGlobeNode = SCNNode(geometry: rightGlobeNodeGeometry)
-        rightGlobeNode.position = SCNVector3Make(0, 2, 0)
-        let rightGlobeLight = SCNLight()
-        rightGlobeLight.type = SCNLightTypeSpot
-        rightGlobeLight.color = UIColor.cyanColor()
-        rightGlobeLight.spotInnerAngle = 160
-        rightGlobeLight.spotOuterAngle = 240.0
-        rightGlobeNode.light = rightGlobeLight
-        
-        rightGlobeNode.eulerAngles.x = Float( M_PI_2)
-        rightGlobeNode.eulerAngles.z = Float( M_PI_4)
-        rightWingNode.addChildNode(rightGlobeNode)
+//        let rightGlobeNodeGeometry = SCNSphere(radius: 0.15)
+//        let rightGlobeNodeMaterial = SCNMaterial()
+//        rightGlobeNodeMaterial.emission.contents = UIColor.cyanColor()
+//        rightGlobeNodeGeometry.materials = [rightGlobeNodeMaterial]
+//        let rightGlobeNode = SCNNode(geometry: rightGlobeNodeGeometry)
+//        rightGlobeNode.position = SCNVector3Make(0, 2, 0)
+//        let rightGlobeLight = SCNLight()
+//        rightGlobeLight.type = SCNLightTypeOmni
+//        rightGlobeLight.color = UIColor.cyanColor()
+//        rightGlobeLight.attenuationStartDistance = 80
+//        rightGlobeLight.attenuationEndDistance = 120
+//        rightGlobeNode.light = rightGlobeLight
+//        
+//        rightGlobeNode.eulerAngles.x = Float( M_PI_2)
+//        rightGlobeNode.eulerAngles.z = Float( M_PI_4)
+//        rightWingNode.addChildNode(rightGlobeNode)
 
         
         
@@ -561,42 +561,58 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Left torch
         let leftTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
         let leftTorchMaterial = SCNMaterial()
-        leftTorchMaterial.diffuse.contents = UIColor.blackColor()
+        leftTorchMaterial.diffuse.contents = UIColor.darkGrayColor()
         leftTorchGeometry.materials = [leftTorchMaterial]
         let leftTorchNode = SCNNode(geometry: leftTorchGeometry)
         leftTorchNode.position.y = 2
-        leftTorchNode.position.x = -0.75
-        leftTorchNode.eulerAngles.x = Float(M_PI_2)
+        leftTorchNode.position.x = 0
+        leftTorchNode.position.z = 0.2
+        //leftTorchNode.eulerAngles.x = Float(M_PI_4)
         
+        let leftTorchLightNode = SCNNode()
         let leftTorchLight = SCNLight()
         leftTorchLight.type = SCNLightTypeSpot
         leftTorchLight.spotInnerAngle = 15.0
         leftTorchLight.spotOuterAngle = 60.0
         leftTorchLight.castsShadow = false
         //leftTorchLight.color = UIColor(white: 0.5, alpha: 0.5)
-        leftTorchNode.light = leftTorchLight
+        leftTorchLightNode.eulerAngles.x = Float(M_PI_2)
+        leftTorchLightNode.light = leftTorchLight
+        leftTorchNode.addChildNode(leftTorchLightNode)
         
-        
-        // Right torch
-        let rightTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
-        let rightTorchMaterial = SCNMaterial()
-        rightTorchMaterial.diffuse.contents = UIColor.blackColor()
-        rightTorchGeometry.materials = [rightTorchMaterial]
-        let rightTorchNode = SCNNode(geometry: rightTorchGeometry)
-        rightTorchNode.position.y = 2
-        rightTorchNode.position.x = 0.75
-        rightTorchNode.eulerAngles.x = Float(M_PI_2)
-        
-        let rightTorchLight = SCNLight()
-        rightTorchLight.type = SCNLightTypeSpot
-        rightTorchLight.spotInnerAngle = 15.0
-        rightTorchLight.spotOuterAngle = 60.0
-        rightTorchLight.castsShadow = false
-        //rightTorchLight.color =  UIColor(white: 0.5, alpha: 0.5)
-        rightTorchNode.light = rightTorchLight
+//        
+//        // Right torch
+//        let rightTorchGeometry = SCNCone(topRadius: 0.15, bottomRadius: 0.05, height: 1)
+//        let rightTorchMaterial = SCNMaterial()
+//        rightTorchMaterial.diffuse.contents = UIColor.blackColor()
+//        rightTorchGeometry.materials = [rightTorchMaterial]
+//        let rightTorchNode = SCNNode(geometry: rightTorchGeometry)
+//        rightTorchNode.position.y = 2
+//        rightTorchNode.position.x = 0.75
+//        //rightTorchNode.eulerAngles.x = Float(M_PI_4)
+//        
+//        let rightTorchLight = SCNLight()
+//        rightTorchLight.type = SCNLightTypeSpot
+//        rightTorchLight.spotInnerAngle = 15.0
+//        rightTorchLight.spotOuterAngle = 60.0
+//        rightTorchLight.castsShadow = false
+//        //rightTorchLight.color =  UIColor(white: 0.5, alpha: 0.5)
+//        rightTorchNode.light = rightTorchLight
 
         
-   
+        
+        
+        
+        let globeNode = SCNNode( )
+        globeNode.position = SCNVector3Make(0, -4, 2)
+        let globeLight = SCNLight()
+        globeLight.type = SCNLightTypeOmni
+        globeLight.color = UIColor.cyanColor()
+        globeLight.attenuationStartDistance = 80
+        globeLight.attenuationEndDistance = 160
+        globeLight.attenuationFalloffExponent = 1
+        globeNode.light = globeLight
+        
         
         
         
@@ -607,7 +623,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         innerShipNode.addChildNode(leftWingNode)
         innerShipNode.addChildNode(rightWingNode)
         innerShipNode.addChildNode(leftTorchNode)
-        innerShipNode.addChildNode(rightTorchNode)
+        //innerShipNode.addChildNode(rightTorchNode)
+        innerShipNode.addChildNode(globeNode)
+
         
         
         shipYawNode.addChildNode(innerShipNode)
