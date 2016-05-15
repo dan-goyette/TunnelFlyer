@@ -6,6 +6,7 @@
 //  Copyright © 2016 Dan Goyette. All rights reserved.
 //
 
+import SceneKit
 
 class GameStats {
     var shipPitch : Float = 0.0
@@ -26,4 +27,14 @@ class JoystickValues {
     var leftJoystickYValue : Float = 0.0
     var rightJoystickXValue : Float = 0.0
     var rightJoystickYValue : Float = 0.0
+}
+
+class NodePositionReference {
+    init(n : SCNNode, p: SCNVector3) {
+        self.node = n
+        self.position = p
+    }
+    
+    var node : SCNNode
+    var position : SCNVector3
 }
