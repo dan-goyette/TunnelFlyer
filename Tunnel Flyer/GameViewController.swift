@@ -25,11 +25,11 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     let RING_VARIANCE_MAX : Float = 8.0
     let CAMERA_SPEED : Float = 0.35
     let HEX_RING_Z_INTERVAL : Float = 10
-    let SHIP_MOVEMENT_SPEED : Float = 80.0
+    let SHIP_MOVEMENT_SPEED : Float = 200.0
     let SHIP_TERMINAL_SPEED : Float = 100.0
-    let SHIP_PITCH_INTERVAL : Float = 0.35
-    let SHIP_ROLL_INTERVAL : Float = 0.35
-    let SHIP_YAW_INTERVAL : Float = 0.35
+    let SHIP_PITCH_INTERVAL : Float = 20.35
+    let SHIP_ROLL_INTERVAL : Float = 20.35
+    let SHIP_YAW_INTERVAL : Float = 20.35
     let BASE_SHIP_EULER_X : Float = -1 * Float(M_PI_2)
     
     
@@ -64,11 +64,14 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // If the unified node doesn't have some underlying shape, then the physics simulation won't be applied to it.
         let unifiedCameraShipNodeShape = SCNShape()
         unifiedCameraShipNode = SCNNode(geometry: unifiedCameraShipNodeShape)
-        let unifiedPhysicsBody = SCNPhysicsBody(type: .Dynamic, shape: nil)
+        let unifiedPhysicsBody = SCNPhysicsBody(type: .Dynamic, shape: SCNPhysicsShape(geometry: SCNBox(width: 2, height: 1, length: 3, chamferRadius: 0), options: nil))
         unifiedPhysicsBody.angularDamping = 0.999
-        unifiedPhysicsBody.damping = 0.9
-        unifiedCameraShipNode.physicsBody = unifiedPhysicsBody
+        unifiedPhysicsBody.damping = 0.5
+        unifiedPhysicsBody.mass = 1
         unifiedPhysicsBody.affectedByGravity = false
+        unifiedPhysicsBody.categoryBitMask = CollisionBitmasks.Ship
+        unifiedPhysicsBody.collisionBitMask = CollisionBitmasks.Asteroids | CollisionBitmasks.Walls
+        unifiedCameraShipNode.physicsBody = unifiedPhysicsBody
         
         // Create ship
         createShip()
@@ -92,12 +95,12 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         scene.rootNode.addChildNode(unifiedCameraShipNode)
 
         // create and add a light to the scene
-//        let lightNode = SCNNode()
-//        lightNode.light = SCNLight()
-//        lightNode.light!.type = SCNLightTypeOmni
-//        lightNode.position = SCNVector3(x: 0, y: 0, z: 0)
-//        scene.rootNode.addChildNode(lightNode)
-//        
+        let lightNode = SCNNode()
+        lightNode.light = SCNLight()
+        lightNode.light!.type = SCNLightTypeOmni
+        lightNode.position = SCNVector3(x: 0, y: 0, z: 0)
+        scene.rootNode.addChildNode(lightNode)
+        
         // create and add an ambient light to the scene
         let ambientLightNode = SCNNode()
         ambientLightNode.light = SCNLight()
@@ -130,13 +133,17 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // configure the view
         scnView.backgroundColor = UIColor.blackColor()
 
-        //scnView.debugOptions = .ShowPhysicsShapes
+        scnView.debugOptions = .ShowPhysicsShapes
         //scnView.debugOptions = .ShowLightExtents
         
         createHudScene()
         scnView.overlaySKScene = hudScene
 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameViewController.joystickValueChanged(_:)), name: joystickValueChangedNotificationKey, object: nil)
+        
+        
+        
+        
         
     }
     
@@ -169,20 +176,6 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         ring.append(SCNVector3Make(-1 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
         ring.append(SCNVector3Make(-2 * RING_SIZE_MULTIPLIER +  getHexVariance(), -1 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
 
-        
-        
-//        ring.append(SCNVector3Make(-3 * RING_SIZE_MULTIPLIER + getHexVariance(), 0 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
-//        
-//        ring.append(SCNVector3Make(-1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), 2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
-//        ring.append(SCNVector3Make(1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), 2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
-//        
-//        
-//        ring.append(SCNVector3Make(3 * RING_SIZE_MULTIPLIER + getHexVariance(), 0 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
-//        ring.append(SCNVector3Make(-1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
-//        ring.append(SCNVector3Make(1.5 * RING_SIZE_MULTIPLIER + getHexVariance(), -2 * RING_SIZE_MULTIPLIER + getHexVariance(), z))
-        
-
-
         return ring
     
     }
@@ -202,14 +195,16 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
             // Remove any that are more than 2X DrawDistance behind the current ring's Z.
 
             let maxDistance =  2 * self.DRAW_DISTANCE
-            for i in (0...(tunnelNodes.count - 1)).reverse() {
-                if (getDistance(unifiedCameraShipNode.presentationNode.position, position2: tunnelNodes[i].position) > maxDistance) {
-                    tunnelNodes[i].node.removeFromParentNode()
-                    tunnelNodes.removeAtIndex(i)
+            if (tunnelNodes.count > 0) {
+                for i in (0...(tunnelNodes.count - 1)).reverse() {
+                    if (getDistance(unifiedCameraShipNode.presentationNode.position, position2: tunnelNodes[i].position) > maxDistance) {
+                        tunnelNodes[i].node.removeFromParentNode()
+                        tunnelNodes.removeAtIndex(i)
+                    }
                 }
             }
             
-            if (self.hexRingZ % 20 == 0) {
+            if (self.hexRingZ % 25 == 0) {
                 createDebris()
 
             }
@@ -227,10 +222,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         
         
         // Adjust ship speed to reduce it as the ship approaches terminal velocity.
-        shipPitchNode.rotation.w = shipPitch
-        shipRollNode.rotation.w = shipRoll
-        shipYawNode.rotation.w = shipYaw
-        
+        shipPitchNode.rotation.w = -1 * joystickValues.leftJoystickYValue / 2.0
+        shipRollNode.rotation.w = -1 * joystickValues.rightJoystickXValue / 2.0
+        shipYawNode.rotation.w = -1 * joystickValues.leftJoystickXValue / 2.0
         
         
 
@@ -290,7 +284,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     func createDebris() {
         
-        let cube = SCNBox(width: 4, height: 4, length: 4, chamferRadius: 1.3)
+        let cube = SCNBox(width: 6, height: 6, length: 6, chamferRadius: 2.5)
         
         let material = SCNMaterial()
         //material.doubleSided = true
@@ -312,6 +306,14 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let move = SCNAction.moveByX(CGFloat(randomBetweenNumbers( -3.0, secondNum: 3.0)), y: CGFloat(randomBetweenNumbers( -3.0, secondNum: 3.0)), z: CGFloat(randomBetweenNumbers( -3.0, secondNum: 3.0)), duration: 1)
         let moveLoop = SCNAction.repeatActionForever(move)
         cubeNode.runAction(moveLoop)
+        
+        
+        cubeNode.physicsBody = SCNPhysicsBody(type: .Dynamic, shape: SCNPhysicsShape(node: cubeNode, options: nil))
+        cubeNode.physicsBody!.affectedByGravity = false
+        cubeNode.physicsBody!.categoryBitMask = CollisionBitmasks.Asteroids
+        cubeNode.physicsBody!.collisionBitMask = CollisionBitmasks.Ship | CollisionBitmasks.Walls
+        
+
         
         scene.rootNode.addChildNode(cubeNode)
 
@@ -350,35 +352,11 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         }
     }
     
-    func getHexVariance() -> Float {
-        return randomBetweenNumbers( self.RING_VARIANCE_MIN, secondNum: self.RING_VARIANCE_MAX)
-    }
+    
+    
     
     func addTriangleFromPositions(scene: SCNScene, point1: SCNVector3, point2: SCNVector3, point3: SCNVector3)
     {
-//        let positions: [Float32] = [point1.x, point1.y, point1.z, point2.x, point2.y, point2.z, point3.x, point3.y, point3.z]
-//        let positionData = NSData(bytes: positions, length: sizeof(Float32)*positions.count)
-//        let indices: [Int32] = [0, 1, 2]
-//        let indexData = NSData(bytes: indices, length: sizeof(Int32) * indices.count)
-//        
-//        let source = SCNGeometrySource(data: positionData, semantic: SCNGeometrySourceSemanticVertex, vectorCount: indices.count, floatComponents: true, componentsPerVector: 3, bytesPerComponent: sizeof(Float32), dataOffset: 0, dataStride: sizeof(Float32) * 3)
-//        //let normalSource = SCNGeometrySource(normals: [SCNVector3Make(0, -1, 0), SCNVector3Make(0, -1, 0), SCNVector3Make(0, -1, 0)], count: 3)
-//        let element = SCNGeometryElement(data: indexData, primitiveType: SCNGeometryPrimitiveType.Triangles, primitiveCount: indices.count, bytesPerIndex: sizeof(Int32))
-//        
-//        let triangle = SCNGeometry(sources: [source], elements: [element])
-//        
-//        let material = SCNMaterial()
-//        material.doubleSided = true
-//        material.diffuse.contents =  UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 )  // getRandomShadeOfColor(UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 ), lighter: false)
-//
-//        
-//        triangle.materials = [material]
-//        let shapeNode = SCNNode(geometry: triangle)
-//        tunnelNodes.append(NodePositionReference(n: shapeNode, p: point1))
-//        scene.rootNode.addChildNode(shapeNode)
-        
-        
-        
         let vector12 = GLKVector3Make(point1.x - point2.x, point1.y - point2.y, point1.z - point2.z)
         let vector32 = GLKVector3Make(point3.x - point2.x, point3.y - point2.y, point3.z - point2.z)
         let normalVector = SCNVector3FromGLKVector3(GLKVector3CrossProduct(vector12, vector32))
@@ -392,16 +370,30 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         let indexData = NSData(bytes: indices, length: sizeof(Int32) * indices.count)
         
         let element = SCNGeometryElement(data: indexData, primitiveType: .Triangles, primitiveCount: indices.count, bytesPerIndex: sizeof(Int32))
-        let geometry = SCNGeometry(sources: [vertexSource, normalSource], elements: [element])
+        //let geometry = SCNGeometry(sources: [vertexSource, normalSource], elements: [element])
+        let shape = SCNShape(sources: [vertexSource, normalSource], elements: [element])
         
         let material = SCNMaterial()
-        //material.doubleSided = true
-        material.diffuse.contents = UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 )//  getRandomShadeOfColor(UIColor(red: 41.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 ), lighter: false)
+        material.diffuse.contents = UIColor(red: 101.0 / 256.0, green: 16.0 / 256.0, blue: 0, alpha: 1 )
         
-        geometry.materials = [material]
-        let shapeNode = SCNNode(geometry: geometry)
-        tunnelNodes.append(NodePositionReference(n: shapeNode, p: point1))
+        shape.materials = [material]
+        let shapeNode = SCNNode(geometry: shape)
+        
+//        let physicsBody = SCNPhysicsBody(type: .Kinematic, shape: SCNPhysicsShape(geometry: SCNBox(width: 1, height: 2, length: 3, chamferRadius: 0), options: nil))
+//        shapeNode.physicsBody = physicsBody
+        
+        
+        
         scene.rootNode.addChildNode(shapeNode)
+    }
+    
+    func getHexVariance() -> Float {
+        return randomBetweenNumbers( self.RING_VARIANCE_MIN, secondNum: self.RING_VARIANCE_MAX)
+    }
+    
+    
+    func physicsWorld(world: SCNPhysicsWorld, didBeginContact contact: SCNPhysicsContact) {
+        var x = 0
     }
     
     
@@ -577,7 +569,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         leftTorchLight.castsShadow = false
         //leftTorchLight.color = UIColor(white: 0.5, alpha: 0.5)
         leftTorchLightNode.eulerAngles.x = Float(M_PI_2)
-        leftTorchLightNode.light = leftTorchLight
+        //leftTorchLightNode.light = leftTorchLight
         leftTorchNode.addChildNode(leftTorchLightNode)
         
 //        
@@ -624,7 +616,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         innerShipNode.addChildNode(rightWingNode)
         innerShipNode.addChildNode(leftTorchNode)
         //innerShipNode.addChildNode(rightTorchNode)
-        innerShipNode.addChildNode(globeNode)
+        //innerShipNode.addChildNode(globeNode)
 
         
         
@@ -650,6 +642,9 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
 //
 //        shipNode.addChildNode(spotLightNode)
         
+       
+
+        
         unifiedCameraShipNode.addChildNode(shipNode)
     }
     
@@ -674,6 +669,7 @@ class GameViewController: UIViewController, SCNSceneRendererDelegate {
         // Release any cached data, images, etc that aren't in use.
     }
 
+    
 }
 
 

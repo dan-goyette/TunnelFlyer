@@ -38,3 +38,10 @@ class NodePositionReference {
     var node : SCNNode
     var position : SCNVector3
 }
+
+
+class CollisionBitmasks {
+    static var Ship = 1 << 0
+    static var Walls = 1 << 1
+    static var Asteroids = 1 << 2
+}
